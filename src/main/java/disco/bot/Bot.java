@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -27,7 +28,6 @@ public class Bot {
 
 
     private static GatewayDiscordClient client;
-    private static String finalMessage, finalMessage2;
 
     static {
         try {
@@ -41,13 +41,11 @@ public class Bot {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    @SneakyThrows(IOException.class)
+    public static void main(String[] args) throws InterruptedException  {
 
         Random random = new Random();
-        List<String> maser = Arrays.asList("Lucjan Próchnica", "Adam Dubiel", "Patryk Pyrchla", "Paweł Jarzębowski", "Mateusz Książek");
         final boolean[] luka = {false};
-        ACLParser parser = new ACLParser();
-        List<String> ping = Arrays.asList("Lucjana", "Luki", "JarzomBa", "DubSona", "mknbla", "Maniaka");
 
         client.getEventDispatcher()
                 .on(ReadyEvent.class)
@@ -60,178 +58,67 @@ public class Bot {
                 .subscribe(event -> {
                     String msg = event.getMessage().getContent().toLowerCase();
 
-                    if ( msg.equals("!dubson") ){
-                        createMessage( event, MiddleFingerAlphabet.printFuckerText( "dubson" ) );
-                    }
-                    if ( msg.equals("!luka") ){
-                        createMessage( event, MiddleFingerAlphabet.printFuckerText( "luka" ) );
-                    }
+                    if ( msg.equals("!dubson") ) createMessage( event, MiddleFingerAlphabet.printFuckerText( "dubson" ) );
+
+                    if ( msg.equals("!luka") )createMessage( event, MiddleFingerAlphabet.printFuckerText( "luka" ) );
 
                     if ( !msg.equalsIgnoreCase("!maser") &&
                             authorId(event).equals(UserId.LUKA.id) &&
                             Stream.of("maser", "maserati", "itaresam", "masser").anyMatch( msg::contains ) ) {
-                        reactUnicode( event, Reactions.TRACTOR );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_2 );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_5 );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_1 );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_4 );
-                        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_3 );
-                        reactUnicode( event, Reactions.POOP );
-                        reactUnicode( event, Reactions.TOILET );
+                        reactAtMaserByLuka( event );
                     }
 
-                    if ( msg.equals("!maser")) {
-                        String randomDriver = maser.get(random.nextInt(5));
-                        if (randomDriver.toLowerCase().contains("lucjan")) {
-                            createMessage( event, "Nieszczęśliwym kierowcą Maserati na niby został... " + randomDriver + ". Do chuja wafla! Zalecane jest ponowne wykonanie losowania." );
-                        } else {
-                            createMessage( event, "Szczęśliwym kierowcą Maserati został... " + randomDriver + ". Gratuluję serdecznie! " );
+                    if ( msg.equals("!maser")) getRandomDriver( event, random );
+
+                    if ( msg.contains("!losuj kierowcy:") && msg.contains("zespoly:") ) losuj(event);
+
+                    if ( msg.equals("!lukafuck") ) switchLukaFuck( event, luka );
+
+                    if ( msg.contains("!fuckertext") ) convertTextToFuckers( event );
+
+                    if ( luka[0] && authorId(event).equals(Bot.UserId.LUKA.id) ) reactUnicode( event, Reactions.MIDDLE_FINGER );
+
+
+                    if ( event.getMessage().getChannelId().equals(Snowflake.of(ChannelsId.ANKIETY.getId())) ) initPool( event );
+
+                    if (event.getMessage().getContent().toLowerCase().contains("!ping")) pingMsg( event, random);
+
+                    try {
+
+                        if (msg.equals("!preqwek")) createMessage(event, codeBlockWrapper(ACLParser.getACLWEKPreq(1)));
+
+                        if (msg.contains("!preqwekr0"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLWEKPreq(0)));
+
+                        if (msg.equals("!preqgt4")) createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(5)));
+
+                        if (msg.contains("!preqgt4r0"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(0)));
+
+                        if (msg.contains("!preqgt4r1"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(1)));
+
+                        if (msg.contains("!preqgt4r2"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(2)));
+
+                        if (msg.contains("!preqgt4r3"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(3)));
+
+                        if (msg.contains("!preqgt4r4"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(4)));
+
+                        if (msg.contains("!preqgt4r5"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(5)));
+
+                        if (msg.contains("!preqgt4r6"))
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(6)));
+
+                        if (msg.contains("!generalkagt4")) {
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4DriverStandings()));
+                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4TeamStandings()));
                         }
-                    }
-
-                    if ( msg.contains("!losuj kierowcy:") && msg.contains("zespoly:") ) {
-                        losuj(event);
-                    }
-
-                    if ( msg.equals("!lukafuck") ) {
-                        if ( !authorId(event).equals(Bot.UserId.LUKA.id) ) {
-                            luka[0] = !luka[0];
-                            String readParam = luka[0] ? "włączona" : "wyłączona";
-                            createMessage( event, "Opcja !lukafuck została " + readParam + ".");
-                        } else {
-                            createMessage( event, "Luka, wszyscy inni mogą tym sterować, prócz Ciebie. Bądź miły dla cumpli!" );
-                        }
-                    }
-
-                    if ( msg.contains("!fuckertext") ) {
-                        String fuckerText = MiddleFingerAlphabet.printFuckerText(event.getMessage().getContent());
-                        if (fuckerText.length() >= 2000) {
-                            createMessage( event, "Wyszło ponad 2000 znaków :( " + Reactions.MIDDLE_FINGER.getValue() );
-                        } else {
-                            createMessage( event, fuckerText );
-                        }
-                    }
-
-                    if ( luka[0] && authorId(event).equals(Bot.UserId.LUKA.id) ) {
-                        reactUnicode( event, Reactions.MIDDLE_FINGER );
-                    }
-
-                    if ( event.getMessage().getChannelId().equals(Snowflake.of(ChannelsId.ANKIETY.getId())) ) {
-                        reactUnicode( event, Reactions.THUMBS_UP );
-                        reactUnicode( event, Reactions.THUMBS_DOWN );
-                        reactUnicode( event, Reactions.WHATEVER );
-                        reactUnicode( event, Reactions.FACEPALM );
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!ping")){
-                        Duration between = Duration.between(event.getMessage().getTimestamp(), Instant.now());
-                        if(abs(between.toMillis()) < 1500){
-                            event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong! Opóźnienie wynosi " + abs(between.toMillis()) + "ms. To na pewno mniej niż opóźnienie " + ping.get(random.nextInt(ping.size())) + "! " + disco.bot.Bot.Reactions.MIDDLE_FINGER.getValue())).subscribe();
-                        }
-                        else event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong! Opóźnienie wynosi " + abs(between.toMillis()) + "ms. Totalna kompromitacja. Sugeruję nastawić zegarek lub dorzucić węgla do RaspberryPi" + disco.bot.Bot.Reactions.MIDDLE_FINGER.getValue())).subscribe();
-
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().equals("!preqwek")) {
-                        try {
-                            finalMessage = parser.getACLWEKPreq(1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```" );
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqwekr0")) {
-                        try {
-                            finalMessage = parser.getACLWEKPreq(0);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().equals("!preqgt4")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(5);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r0")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(0);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r1")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r2")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(2);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r3")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(3);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r4")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(4);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r5")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(5);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!preqgt4r6")) {
-                        try {
-                            finalMessage = parser.getACLGT4Preq(6);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                    }
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!generalkagt4")) {
-                        try {
-                            finalMessage = parser.getACLGT4DriverStandings();
-                            finalMessage2 = parser.getACLGT4TeamStandings();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        createMessage( event, "```" + finalMessage + "```");
-                        createMessage( event, "```" + finalMessage2 + "```");
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
 
 //                    client.getRestClient()
@@ -244,16 +131,13 @@ public class Bot {
 
                 });
 
-
-
-
-        List<String> timeAndMessage = WebParser.parseFIETServer();
+        List<String> timeAndMessage = FIETParser.parseFIETServer();
         String savedTime = timeAndMessage.isEmpty() ? null : timeAndMessage.get(0);
 
         while (true) {
             int seconds = 120;
             Thread.sleep(1000 * seconds);
-            List<String> freshTimeAndMessage = WebParser.parseFIETServer();
+            List<String> freshTimeAndMessage = FIETParser.parseFIETServer();
             String freshTime =  freshTimeAndMessage.isEmpty() ? null : freshTimeAndMessage.get(0);
             if (freshTime != null && savedTime != null && !freshTime.equals(savedTime)) {
                 client.getRestClient().getChannelById(Snowflake.of(ChannelsId.ACL_WEK.getId())).createMessage(freshTimeAndMessage.get(1)).subscribe();
@@ -277,6 +161,68 @@ public class Bot {
 
         }
 
+    }
+
+    private static void pingMsg(MessageCreateEvent event, Random random) {
+        List<String> ping = Arrays.asList("Lucjana", "Luki", "JarzomBa", "DubSona", "mknbla", "Maniaka");
+        Duration between = Duration.between(event.getMessage().getTimestamp(), Instant.now());
+        if(abs(between.toMillis()) < 1500){
+            event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong! Opóźnienie wynosi " + abs(between.toMillis()) + "ms. To na pewno mniej niż opóźnienie " + ping.get(random.nextInt(ping.size())) + "! " + disco.bot.Bot.Reactions.MIDDLE_FINGER.getValue())).subscribe();
+        }
+        else event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong! Opóźnienie wynosi " + abs(between.toMillis()) + "ms. Totalna kompromitacja. Sugeruję nastawić zegarek lub dorzucić węgla do RaspberryPi" + disco.bot.Bot.Reactions.MIDDLE_FINGER.getValue())).subscribe();
+    }
+
+    private static void initPool(MessageCreateEvent event) {
+        reactUnicode( event, Reactions.THUMBS_UP );
+        reactUnicode( event, Reactions.THUMBS_DOWN );
+        reactUnicode( event, Reactions.WHATEVER );
+        reactUnicode( event, Reactions.FACEPALM );
+    }
+
+    private static void convertTextToFuckers( MessageCreateEvent event ) {
+        String fuckerText = MiddleFingerAlphabet.printFuckerText(event.getMessage().getContent());
+        if (fuckerText.length() >= 2000) {
+            createMessage( event, "Wyszło ponad 2000 znaków :( " + Reactions.MIDDLE_FINGER.getValue() );
+        } else {
+            createMessage( event, fuckerText );
+        }
+    }
+
+    private static void switchLukaFuck(MessageCreateEvent event, boolean[] luka) {
+        if ( !authorId(event).equals(Bot.UserId.LUKA.id) ) {
+            luka[0] = !luka[0];
+            String readParam = luka[0] ? "włączona" : "wyłączona";
+            createMessage( event, "Opcja !lukafuck została " + readParam + ".");
+        } else {
+            createMessage( event, "Luka, wszyscy inni mogą tym sterować, prócz Ciebie. Bądź miły dla cumpli!" );
+        }
+    }
+
+    private static void reactAtMaserByLuka( MessageCreateEvent event ) {
+        reactUnicode( event, Reactions.TRACTOR );
+        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_2 );
+        reactUnicode( event, Reactions.MIDDLE_FINGER );
+        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_5 );
+        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_1 );
+        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_4 );
+        reactUnicode( event, Reactions.MIDDLE_FINGER_TONE_3 );
+        reactUnicode( event, Reactions.POOP );
+        reactUnicode( event, Reactions.TOILET );
+    }
+
+    private static void getRandomDriver( MessageCreateEvent event, Random random ) {
+        List<String> maser = Arrays.asList("Lucjan Próchnica", "Adam Dubiel", "Patryk Pyrchla", "Paweł Jarzębowski", "Mateusz Książek");
+        String randomDriver = maser.get(random.nextInt(5));
+        if (randomDriver.toLowerCase().contains("lucjan")) {
+            createMessage( event, "Nieszczęśliwym kierowcą Maserati na niby został... " + randomDriver + ". Do chuja wafla! Zalecane jest ponowne wykonanie losowania." );
+        } else {
+            createMessage( event, "Szczęśliwym kierowcą Maserati został... " + randomDriver + ". Gratuluję serdecznie! " );
+        }
+    }
+
+    private static String codeBlockWrapper( String str ) {
+        String wrapper = "```";
+        return wrapper + str + wrapper;
     }
 
     private static void createMessage(MessageCreateEvent event, String message) {
