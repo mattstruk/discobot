@@ -5,7 +5,9 @@ import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
 import lombok.SneakyThrows;
@@ -19,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +31,7 @@ public class Bot {
 
 
     private static GatewayDiscordClient client;
+    private static String BOT_ID;
 
     static {
         try {
@@ -36,6 +40,7 @@ public class Bot {
                         .build()
                         .login()
                         .block();
+             BOT_ID = client.getSelfId().asString();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,6 +51,9 @@ public class Bot {
 
         Random random = new Random();
         final boolean[] luka = {false};
+        List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
+        List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
+
 
         client.getEventDispatcher()
                 .on(ReadyEvent.class)
@@ -54,9 +62,36 @@ public class Bot {
                     System.out.println(String.format("Logged in as %s#%s", self.getUsername(), self.getDiscriminator()));
                 });
 
+
+        /** Reactions event listener
+         */
+        client.getEventDispatcher().on(ReactionAddEvent.class).subscribe(event -> {
+            int countOfReactions = event.getMessage().block().getReactions().stream().mapToInt(Reaction::getCount).sum();
+            if ( isNotABotAndProperChannel( event ) )
+                try {
+                    if ( isReactionAllowed( event, ankietyAllowedReactions )  || hasReactedBefore( event, ankietyAllowedReactions, countOfReactions ) ) {
+                        client.getMessageById(Snowflake.of(event.getChannelId().asLong()), Snowflake.of(event.getMessageId().asLong())).subscribe(e ->
+                                e.removeReaction(event.getEmoji(), event.getUserId()).subscribe());
+                    } else if ( event.getMessage().block().getReactions().stream().filter( reaction -> reaction.getEmoji().asUnicodeEmoji().isPresent() && reaction.getEmoji().asUnicodeEmoji().get().equals( ReactionEmoji.unicode( Reactions.LOCKED.getValue() ) )  ).count() != 1 ) {
+                        makeAnnouncementIfEveryoneVoted( event, ankietyAllowedReactions, countOfReactions );
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+        });
+
+        /** Messages event listener
+         */
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 .subscribe(event -> {
+
+                    if ( event.getMessage().getChannelId().equals(Snowflake.of( ChannelsId.ANKIETY.getId() )) ) initPoll( event, ankietyAllowedReactions );
+
                     String msg = event.getMessage().getContent().toLowerCase();
+
+                    msg = msg.contains("!") ? "!" + StringUtils.substringAfter( msg, "!" ) : msg;
+
+                    if ( StringUtils.isBlank( msg )) return;
 
                     if ( msg.equals("!dubson") ) createMessage( event, MiddleFingerAlphabet.printFuckerText( "dubson" ) );
 
@@ -74,14 +109,13 @@ public class Bot {
 
                     if ( msg.equals("!lukafuck") ) switchLukaFuck( event, luka );
 
-                    if ( msg.contains("!fuckertext") ) convertTextToFuckers( event );
+                    if ( msg.contains("!fuckertext") ) convertTextToFuckers( event, msg );
 
                     if ( luka[0] && authorId(event).equals(Bot.UserId.LUKA.id) ) reactUnicode( event, Reactions.MIDDLE_FINGER );
 
+                    if ( event.getMessage().getChannelId().equals(Snowflake.of(ChannelsId.ANKIETY.getId())) ) initPoll( event, ankietyAllowedReactions );
 
-                    if ( event.getMessage().getChannelId().equals(Snowflake.of(ChannelsId.ANKIETY.getId())) ) initPool( event );
-
-                    if (event.getMessage().getContent().toLowerCase().contains("!ping")) pingMsg( event, random);
+                    if ( msg.contains("!ping") ) pingMsg( event, random);
 
                     try {
 
@@ -121,14 +155,7 @@ public class Bot {
                         e.printStackTrace();
                     }
 
-//                    client.getRestClient()
-//                            .getChannelById(Snowflake.of( toDoFIETId ))
-//                            .getMessagesBefore(Snowflake.of( Instant.now() ))
-//                            .toStream().forEach(msg -> {
-//                                msg.
-//                    });
-
-
+                    if ( msg.equals("!roll") ) rollTheDices( event, random );
                 });
 
         List<String> timeAndMessage = FIETParser.parseFIETServer();
@@ -145,7 +172,7 @@ public class Bot {
             }
 
             String[] currentTime = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()).split(":");
-            if ( ( currentTime[0].equals("18") && ( currentTime[1].equals("00") || currentTime[1].equals("01") || currentTime[1].equals("02")  ) ) ) {
+            if ( isIt(currentTime, 18) || isIt(currentTime, 12) ) {
 
                 List<MessageData> listMono = client.getRestClient()
                         .getChannelById(Snowflake.of( ChannelsId.TODO.getId() ))
@@ -163,6 +190,96 @@ public class Bot {
 
     }
 
+    // todo command bot to put the reaction which is out of the allowed reactions to prevent in future printing out the results of finished polls
+    private static void makeAnnouncementIfEveryoneVoted(ReactionAddEvent event, List<Bot.Reactions> ankietyAllowedReactions, int countOfReactions ) throws InterruptedException {
+        Set<String> usersThatReacted = new HashSet<>();
+        HashMap<String, List<String>> reactionsAndUsers = new LinkedHashMap<>();
+        AtomicInteger counter = new AtomicInteger();
+
+
+        client.getMessageById( Snowflake.of( event.getChannelId().asLong() ), Snowflake.of( event.getMessageId().asLong() ) )
+                .subscribe( e ->
+                    ankietyAllowedReactions.forEach( r -> {
+                        counter.getAndDecrement();
+                        List<String> temporary = new ArrayList<>();
+                        e.getReactors( ReactionEmoji.unicode( r.getValue() ) ).toStream().forEach(user -> {
+                            if ( !BOT_ID.equals( user.getId().asString() ) ) {
+                                temporary.add(user.getUsername());
+                                usersThatReacted.add(user.getId().asString());
+                            }
+                            counter.getAndIncrement();
+                        });
+                        reactionsAndUsers.put(r.getValue(), temporary);
+                        counter.getAndIncrement();
+                    })
+                );
+
+        int time = 200;
+        while (counter.get() < countOfReactions && time < 10000) {
+            int sleep = 200;
+            time += sleep;
+            Thread.sleep( sleep );
+        }
+        counter.set(0);
+
+        String pollResults = StringUtils.replaceEach( reactionsAndUsers.toString(),
+                                                   new String[] {"], ", "{", "}", "[", "]", "="},
+                                                   new String[] {"\n" , "" , "" , "" , "" , ""});
+
+        if ( hasEveryoneVoted( usersThatReacted ) ) {
+            client.getRestClient()
+                    .getChannelById(Snowflake.of( ChannelsId.OGLOSZENIA.getId() ))
+                    .createMessage(String.format("Wyniki ankiety pt. **%s** : \n", event.getMessage().block().getContent()) + pollResults).subscribe();
+            event.getMessage().block().addReaction( ReactionEmoji.unicode( Reactions.LOCKED.getValue() ) ).subscribe();
+        }
+    }
+
+    private static boolean hasEveryoneVoted( Set<String> usersThatReacted ) {
+        return usersThatReacted.containsAll( Stream.of( UserId.values() ).map( UserId::getId ).collect(Collectors.toSet()) );
+    }
+
+    private static boolean isNotABotAndProperChannel(ReactionAddEvent event) {
+        return !event.getUserId().asString().equals( BOT_ID ) && event.getChannelId().equals( Snowflake.of( ChannelsId.ANKIETY.getId() ) );
+    }
+
+    private static boolean isReactionAllowed( ReactionAddEvent event, List<Reactions> ankietyAllowedReactions ) {
+        return !(event.getEmoji().asUnicodeEmoji().isPresent() && ankietyAllowedReactions.stream().anyMatch(r -> ReactionEmoji.unicode( r.getValue() ).equals( ReactionEmoji.unicode( event.getEmoji().asUnicodeEmoji().get().getRaw() ) ) ) );
+    }
+
+    private static void rollTheDices( MessageCreateEvent event, Random random ) {
+        String message = String.format("%s rolls %d (0-100)", event.getMessage().getUserData().username(), random.nextInt(101) );
+        createMessage( event, message );
+    }
+
+    private static boolean isIt( String[] currentTime, int hour ) {
+        return ( currentTime[0].equals( String.valueOf( hour ) ) && ( currentTime[1].equals("00") || currentTime[1].equals("01") || currentTime[1].equals("02")  ) );
+    }
+
+    private static boolean hasReactedBefore( ReactionAddEvent event, List<Bot.Reactions> ankietyAllowedReactions, int countOfReactions ) throws InterruptedException {
+        List<Snowflake> usersThatReacted = new ArrayList<>();
+        AtomicInteger counter = new AtomicInteger();
+
+        client.getMessageById( Snowflake.of( event.getChannelId().asLong() ), Snowflake.of( event.getMessageId().asLong() ) )
+              .subscribe( e ->
+                      ankietyAllowedReactions.forEach( r ->
+                              e.getReactors( ReactionEmoji.unicode( r.getValue() ) )
+                               .subscribe( user -> {
+                                    usersThatReacted.add(user.getId());
+                                    counter.getAndIncrement();
+        })));
+
+        int time = 200;
+        while (counter.get() < countOfReactions && time < 3000) {
+            int sleep = 200;
+            time += sleep;
+            Thread.sleep( sleep );
+        }
+        counter.set(0);
+
+        return Collections.frequency(usersThatReacted, event.getUserId()) >= 2;
+    }
+
+
     private static void pingMsg(MessageCreateEvent event, Random random) {
         List<String> ping = Arrays.asList("Lucjana", "Luki", "JarzomBa", "DubSona", "mknbla", "Maniaka");
         Duration between = Duration.between(event.getMessage().getTimestamp(), Instant.now());
@@ -172,15 +289,12 @@ public class Bot {
         else event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong! Opóźnienie wynosi " + abs(between.toMillis()) + "ms. Totalna kompromitacja. Sugeruję nastawić zegarek lub dorzucić węgla do RaspberryPi" + disco.bot.Bot.Reactions.MIDDLE_FINGER.getValue())).subscribe();
     }
 
-    private static void initPool(MessageCreateEvent event) {
-        reactUnicode( event, Reactions.THUMBS_UP );
-        reactUnicode( event, Reactions.THUMBS_DOWN );
-        reactUnicode( event, Reactions.WHATEVER );
-        reactUnicode( event, Reactions.FACEPALM );
+    private static void initPoll(MessageCreateEvent event, List<Bot.Reactions> ankietyAllowedReactions) {
+        ankietyAllowedReactions.forEach( reaction -> reactUnicode( event, reaction ));
     }
 
-    private static void convertTextToFuckers( MessageCreateEvent event ) {
-        String fuckerText = MiddleFingerAlphabet.printFuckerText(event.getMessage().getContent());
+    private static void convertTextToFuckers( MessageCreateEvent event, String message ) {
+        String fuckerText = MiddleFingerAlphabet.printFuckerText( message );
         if (fuckerText.length() >= 2000) {
             createMessage( event, "Wyszło ponad 2000 znaków :( " + Reactions.MIDDLE_FINGER.getValue() );
         } else {
@@ -269,7 +383,8 @@ public class Bot {
         TODO        ("767780095846776833"),
         LINKS       ("735196193964949606"),
         POGADANKI   ("700694946503720992"),
-        ACL_WEK     ("778000167516373012");
+        ACL_WEK     ("778000167516373012"),
+        OGLOSZENIA  ("700670367131500624");
 
         private final String id;
 
@@ -287,8 +402,8 @@ public class Bot {
         JARZOMB     ("408729434229833729"),
         DUBSON      ("633416304954441758"),
         LUCJAN      ("320695302841434112"),
-        MANIAK      ("0"),
-        MATEUSZ     ("0");
+        MANIAK      ("658052410559823882"),
+        MATEUSZ     ("471116345610862595");
 
         private final String id;
 
@@ -314,7 +429,8 @@ public class Bot {
         THUMBS_UP            ("\uD83D\uDC4D"),
         THUMBS_DOWN          ("\uD83D\uDC4E"),
         WHATEVER             ("\uD83E\uDD37\u200D♂️"),
-        FACEPALM             ("\uD83E\uDD26\u200D♂️");
+        FACEPALM             ("\uD83E\uDD26\u200D♂️"),
+        LOCKED               ("\uD83D\uDD10");
 
 
 
