@@ -29,7 +29,6 @@ public class ACLParser {
             Element i = rows.get(j);
             msg += printText(i);
         }
-        msg += "---\n";
             for (Element i : rows) {
                 for (j = 0; j < ACLNicknames.values().length; j++) {
                     if (i.text().matches(".*" + ACLNicknames.values()[j] + " .*") && Integer.parseInt(i.select("td").first().text()) > 5) {
@@ -40,30 +39,31 @@ public class ACLParser {
             return msg;
     }
 
+    public static void main(String[] args) throws IOException {
+        System.out.println( getACLWEKPreq(1) );
+    }
 
     public static String getACLWEKPreq(int roundID) throws IOException {
         String preqUrl = "https://acleague.com.pl/sezonac17-runda" + roundID + "-wyniki.html";
         Document preqDoc = org.jsoup.Jsoup.connect(preqUrl).ignoreContentType(true).execute().bufferUp().parse();
-        //System.out.println(preqDoc);
+//        System.out.println(preqDoc);
         String msg = "Stan prekwalifikacji: " + preqDoc.select("h3").text() + "\n\n";
         Elements preqTables = preqDoc.select("table");
         //System.out.println(preqTable);
         Elements DPIRows = preqTables.get(0).select("tr");
         Elements GT3Rows = preqTables.get(1).select("tr");
-        //System.out.println(GT3Rows);
         msg += preqDoc.select("h5").get(0).text() + "\n";
         int j;
         for (j = 1; j < 4; j++) {
             Element i = DPIRows.get(j);
             msg += printText(i);
         }
-        msg +="\n\n";
+        msg +="\n";
         msg += preqDoc.select("h5").get(1).text() + "\n";
         for (j = 1; j < 6; j++) {
             Element i = GT3Rows.get(j);
             msg += printText(i);
         }
-        msg += "---\n";
         for (Element i : GT3Rows) {
             for (j = 0; j < ACLNicknames.values().length; j++) {
                 if (i.text().matches(".*" + ACLNicknames.values()[j] + " .*") && Integer.parseInt(i.select("td").first().text()) > 5) {
@@ -129,15 +129,16 @@ public class ACLParser {
     }
 
     private static String printText(Element i) {
-        String msg = i.select("td").first().text() + ". ";
-        msg += i.getElementsByClass("dName").text() + " ";
-        //System.out.println(i.getElementsByClass("tName").text().replace("| ", "") + " );
-        msg += i.select("img[title]").first().attr("title") + " ";
-        msg += i.getElementsByClass("laps").text() + " ";
-        msg += i.getElementsByClass("time").text() + " ";
-        if (i.select("td").first().text().matches("1")) msg += i.getElementsByClass("gap").text() + "\n";
-        else msg += "+" + i.getElementsByClass("gap").text().substring(3) + "\n";
-        return msg;
+        String gap = i.getElementsByClass("gap").text();
+        return PreqRow.builder()
+                .pos( i.select("td").first().text() )
+                .driversName( i.getElementsByClass("dName").text() )
+                .car( i.select("img[title]").first().attr("title") )
+                .numberOfLaps( i.getElementsByClass("laps").text() )
+                .times( i.getElementsByClass("time").text() )
+                .gapToBest( gap.equals("---") ? gap + "-----" : gap )
+                .build()
+                .getFormatted();
     }
 
     private static String printStandings(Element i) {

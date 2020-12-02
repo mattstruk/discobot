@@ -10,7 +10,6 @@ import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -46,7 +45,6 @@ public class Bot {
         }
     }
 
-    @SneakyThrows(IOException.class)
     public static void main(String[] args) throws InterruptedException  {
 
         Random random = new Random();
@@ -158,39 +156,59 @@ public class Bot {
                     if ( msg.equals("!roll") ) rollTheDices( event, random );
                 });
 
-        List<String> timeAndMessage = FIETParser.parseFIETServer();
-        String savedTime = timeAndMessage.isEmpty() ? null : timeAndMessage.get(0);
+        try {
+            List<String> timeAndMessage = FIETParser.parseFIETServer();
+            String savedTime = timeAndMessage != null && timeAndMessage.isEmpty() ? null : timeAndMessage.get(0);
 
-        while (true) {
-            int seconds = 120;
-            Thread.sleep(1000 * seconds);
-            List<String> freshTimeAndMessage = FIETParser.parseFIETServer();
-            String freshTime =  freshTimeAndMessage.isEmpty() ? null : freshTimeAndMessage.get(0);
-            if (freshTime != null && savedTime != null && !freshTime.equals(savedTime)) {
-                client.getRestClient().getChannelById(Snowflake.of(ChannelsId.ACL_WEK.getId())).createMessage(freshTimeAndMessage.get(1)).subscribe();
-                savedTime = freshTime;
-            }
-
-            String[] currentTime = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()).split(":");
-            if ( isIt(currentTime, 18) || isIt(currentTime, 12) ) {
-
-                List<MessageData> listMono = client.getRestClient()
-                        .getChannelById(Snowflake.of( ChannelsId.TODO.getId() ))
-                        .getMessagesBefore( Snowflake.of( Instant.now() ) ).collectList().block();
-
-                if ( listMono != null && listMono.size() == 1 ) {
-                    client.getRestClient()
-                            .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
-                            .createMessage( "Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + listMono.get(0).content() ).subscribe();
-                }
+            while (true) {
+                int seconds = 120;
                 Thread.sleep(1000 * seconds);
-            }
+                List<String> freshTimeAndMessage = FIETParser.parseFIETServer();
+                String freshTime = freshTimeAndMessage.isEmpty() ? null : freshTimeAndMessage.get(0);
+                if (freshTime != null && savedTime != null && !freshTime.equals(savedTime)) {
+                    client.getRestClient().getChannelById(Snowflake.of(ChannelsId.ACL_WEK.getId())).createMessage(freshTimeAndMessage.get(1)).subscribe();
+                    savedTime = freshTime;
+                }
 
+                String[] currentTime = new SimpleDateFormat("HH:mm:ss:dd:MM:yyyy").format(Calendar.getInstance().getTime()).split(":");
+                if (isTimeMatching(currentTime, 18) || isTimeMatching(currentTime, 12)) {
+
+                    List<MessageData> listMono = client.getRestClient()
+                            .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+                            .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+
+                    if (listMono != null && listMono.size() == 1) {
+                        client.getRestClient()
+                                .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
+                                .createMessage("Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + listMono.get(0).content()).subscribe();
+                    }
+                    Thread.sleep(1000 * seconds);
+                }
+
+                reminderPLP(currentTime);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
 
-    // todo command bot to put the reaction which is out of the allowed reactions to prevent in future printing out the results of finished polls
+    private static void reminderPLP(String[] currentTime) {
+        if (  Stream.of(12, 15, 18).anyMatch( i -> isTimeMatching( currentTime, i )) &&
+                 Stream.of("03;12", "17;12", "07;01", "21;01", "04;02", "18;02", "04;03")
+                         .map(s -> s.split(";"))
+                         .anyMatch( dayMonth -> isDateMatching(currentTime, dayMonth[0], dayMonth[1] ) ) )  {
+            client.getRestClient()
+                    .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
+                    .createMessage("Przypomnienie o aktualizacji PLP przed dzisiejsza runda. ").subscribe();
+        }
+    }
+
+    private static boolean isDateMatching(String[] currentTime, String s, String s1) {
+        return currentTime[3].equals(s) && currentTime[4].equals(s1);
+    }
+
     private static void makeAnnouncementIfEveryoneVoted(ReactionAddEvent event, List<Bot.Reactions> ankietyAllowedReactions, int countOfReactions ) throws InterruptedException {
         Set<String> usersThatReacted = new HashSet<>();
         HashMap<String, List<String>> reactionsAndUsers = new LinkedHashMap<>();
@@ -251,7 +269,7 @@ public class Bot {
         createMessage( event, message );
     }
 
-    private static boolean isIt( String[] currentTime, int hour ) {
+    private static boolean isTimeMatching(String[] currentTime, int hour ) {
         return ( currentTime[0].equals( String.valueOf( hour ) ) && ( currentTime[1].equals("00") || currentTime[1].equals("01") || currentTime[1].equals("02")  ) );
     }
 

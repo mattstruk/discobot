@@ -18,7 +18,7 @@ class MiddleFingerAlphabet {
 
     private static final Map<String, FiveStringHolder> map = Stream.of(
             new AbstractMap.SimpleEntry<>("a", FiveStringHolder.builder()
-                    .first(".    %1$s%1$s    ")
+                    .first("_ _ _ _  %1$s%1$s    ")
                     .second("   %1$s    %1$s  ")
                     .third("  %1$s%1$s%1$s ")
                     .fourth(" %1$s        %1$s")

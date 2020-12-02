@@ -23,7 +23,6 @@ class FIETParser {
 
 
     static List<String> parseFIETServer() throws IOException {
-
         String link = "http://managerdc5.rackservice.org:50925/lapstat";
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
@@ -38,13 +37,13 @@ class FIETParser {
 
         String message = "**Nowy bestlap**:\n";
 
-        if ( elements.size() >= 1 ) {
+        if (elements.size() >= 1) {
             Element firstElement = elements.get(0);
-            returnList.add(StringUtils.substringBetween( firstElement.select("td:nth-child(4)").toString(), "bestLap\">", "</td>" ));
-            message += "Tor: " + replaceTrackOrCar ( doc.select("select#trackname > option[selected]").first().absUrl("value").replaceAll("http://managerdc5.rackservice.org:50925/", ""), Track.class ) + "\n";
-            message += "Czas: " + StringUtils.substringBetween( firstElement.select("td:nth-child(4)").toString(), "bestLap\">", "</td>" ) + "\n";
-            message += "Kierowca: " + StringUtils.substringBetween( firstElement.select("td:nth-child(2)").toString(), "bestLap\">", "</td>") +"\n";
-            message += "Samochód: " + replaceTrackOrCar( StringUtils.substringBetween( firstElement.select("td:nth-child(3)").toString(), "bestLap\">", "</td>"), Car.class ) + "\n";
+            returnList.add(StringUtils.substringBetween(firstElement.select("td:nth-child(4)").toString(), "bestLap\">", "</td>"));
+            message += "Tor: " + replaceTrackOrCar(doc.select("select#trackname > option[selected]").first().absUrl("value").replaceAll("http://managerdc5.rackservice.org:50925/", ""), Track.class) + "\n";
+            message += "Czas: " + StringUtils.substringBetween(firstElement.select("td:nth-child(4)").toString(), "bestLap\">", "</td>") + "\n";
+            message += "Kierowca: " + StringUtils.substringBetween(firstElement.select("td:nth-child(2)").toString(), "bestLap\">", "</td>") + "\n";
+            message += "Samochód: " + replaceTrackOrCar(StringUtils.substringBetween(firstElement.select("td:nth-child(3)").toString(), "bestLap\">", "</td>"), Car.class) + "\n";
             returnList.add(message);
         } else {
             return Collections.emptyList();
