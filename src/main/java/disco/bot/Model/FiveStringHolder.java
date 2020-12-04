@@ -1,4 +1,4 @@
-package disco.bot;
+package disco.bot.Model;
 
 
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-class FiveStringHolder {
+public class FiveStringHolder {
     private String first;
     private String second ;
     private String third;

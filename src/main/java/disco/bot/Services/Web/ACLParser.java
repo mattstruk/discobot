@@ -1,5 +1,6 @@
-package disco.bot;
+package disco.bot.Services.Web;
 
+import disco.bot.Model.PreqRow;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -159,4 +160,58 @@ public class ACLParser {
         return msg;
     }
 
+}
+
+enum ACLNicknames {
+    LUCJAN {
+        @Override
+        public String toString() {
+            return "Lucjan Prochnica";
+        }
+    },
+    LUKA {
+        @Override
+        public String toString() {
+            return "Luka";
+        }
+    },
+    MANIAK {
+        @Override
+        public String toString() {
+            return "Patryk Pyrchla";
+        }
+    },
+    DUBSON {
+        @Override
+        public String toString() {
+            return "Adam Dubiel";
+        }
+    },
+    JARZOMB {
+        @Override
+        public String toString() {
+            return "Pawel Jarzebowski";
+        }
+    },
+    MKNBL {
+        @Override
+        public String toString() {
+            return "mknbl";
+        }
+    },
+}
+
+enum ACLTeamNames {
+    ABS {
+        @Override
+        public String toString() {
+            return "ForzaItalia.pl eSports TeamABS";
+        }
+    },
+    LUKA {
+        @Override
+        public String toString() {
+            return "ForzaItalia.pl eSports TeamTC";
+        }
+    },
 }

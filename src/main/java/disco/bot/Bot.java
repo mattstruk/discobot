@@ -1,5 +1,9 @@
 package disco.bot;
 
+import disco.bot.Services.MiddleFingerAlphabet;
+import disco.bot.Services.ToDoNotificatons;
+import disco.bot.Services.Web.ACLParser;
+import disco.bot.Services.Web.FIETParser;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
@@ -16,6 +20,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,6 +36,7 @@ public class Bot {
 
     private static GatewayDiscordClient client;
     private static String BOT_ID;
+    private static final String CHANNEL_DIVIDER = ":";
 
     static {
         try {
@@ -52,14 +58,13 @@ public class Bot {
         List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
         List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
 
-
         client.getEventDispatcher()
                 .on(ReadyEvent.class)
                 .subscribe(event -> {
                     User self = event.getSelf();
                     System.out.println(String.format("Logged in as %s#%s", self.getUsername(), self.getDiscriminator()));
+                    System.out.println( "Wersja z 4 grudnia 2020 21:50" );
                 });
-
 
         /** Reactions event listener
          */
@@ -82,6 +87,15 @@ public class Bot {
          */
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 .subscribe(event -> {
+
+                    if ( event.getMessage().getChannelId().equals( Snowflake.of( ChannelsId.PRIV_DIRECT.getId()) ) &&
+                            event.getMessage().getAuthor().get().getId().asString().equals( UserId.LUCJAN.getId() ) ) {
+                        String channelId = extractChannelFromMessage( event.getMessage().getContent() );
+                        if (channelId != null)
+                            client.getRestClient()
+                                    .getChannelById(Snowflake.of( channelId ))
+                                    .createMessage( StringUtils.substringAfter( event.getMessage().getContent(), CHANNEL_DIVIDER) ).subscribe();
+                    }
 
                     if ( event.getMessage().getChannelId().equals(Snowflake.of( ChannelsId.ANKIETY.getId() )) ) initPoll( event, ankietyAllowedReactions );
 
@@ -153,7 +167,7 @@ public class Bot {
                         e.printStackTrace();
                     }
 
-                    if ( msg.equals("!roll") ) rollTheDices( event, random );
+                    if ( msg.equals("!roll") ) rollTheDice( event, random );
                 });
 
         try {
@@ -171,16 +185,22 @@ public class Bot {
                 }
 
                 String[] currentTime = new SimpleDateFormat("HH:mm:ss:dd:MM:yyyy").format(Calendar.getInstance().getTime()).split(":");
-                if (isTimeMatching(currentTime, 18) || isTimeMatching(currentTime, 12)) {
 
+                if (Stream.of(9, 12, 15, 18, 21).anyMatch( i -> isTimeMatching( currentTime, i ))) {
                     List<MessageData> listMono = client.getRestClient()
                             .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
                             .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
-                    if (listMono != null && listMono.size() == 1) {
-                        client.getRestClient()
-                                .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
-                                .createMessage("Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + listMono.get(0).content()).subscribe();
+                    if (listMono != null) {
+                        try {
+                            String getMessage = ToDoNotificatons.notifications(listMono.get(0).content(), currentTime[0]);
+                            if (StringUtils.isNotBlank( getMessage ))
+                                client.getRestClient()
+                                        .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
+                                        .createMessage("Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + getMessage).subscribe();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
                     Thread.sleep(1000 * seconds);
                 }
@@ -194,14 +214,30 @@ public class Bot {
 
     }
 
-    private static void reminderPLP(String[] currentTime) {
+    private static String extractChannelFromMessage( String content ) {
+        String identificator = StringUtils.substringBefore(content, CHANNEL_DIVIDER);
+        switch (identificator) {
+            case "pogadanki":
+                return ChannelsId.POGADANKI.getId();
+            case "simgrid":
+                return ChannelsId.SIM_GRID.getId();
+            case "acl-wek":
+                return ChannelsId.ACL_WEK.getId();
+            default:
+                return null;
+        }
+    }
+
+    private static void reminderPLP(String[] currentTime) throws InterruptedException {
         if (  Stream.of(12, 15, 18).anyMatch( i -> isTimeMatching( currentTime, i )) &&
                  Stream.of("03;12", "17;12", "07;01", "21;01", "04;02", "18;02", "04;03")
                          .map(s -> s.split(";"))
                          .anyMatch( dayMonth -> isDateMatching(currentTime, dayMonth[0], dayMonth[1] ) ) )  {
             client.getRestClient()
                     .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
-                    .createMessage("Przypomnienie o aktualizacji PLP przed dzisiejsza runda. ").subscribe();
+                    .createMessage("@everyone Przypomnienie o aktualizacji PLP przed dzisiejsza runda. Link do pobrania: https://tinyurl.com/y6zjrdv6").subscribe();
+
+            Thread.sleep(60000);
         }
     }
 
@@ -264,7 +300,7 @@ public class Bot {
         return !(event.getEmoji().asUnicodeEmoji().isPresent() && ankietyAllowedReactions.stream().anyMatch(r -> ReactionEmoji.unicode( r.getValue() ).equals( ReactionEmoji.unicode( event.getEmoji().asUnicodeEmoji().get().getRaw() ) ) ) );
     }
 
-    private static void rollTheDices( MessageCreateEvent event, Random random ) {
+    private static void rollTheDice(MessageCreateEvent event, Random random ) {
         String message = String.format("%s rolls %d (0-100)", event.getMessage().getUserData().username(), random.nextInt(101) );
         createMessage( event, message );
     }
@@ -402,7 +438,9 @@ public class Bot {
         LINKS       ("735196193964949606"),
         POGADANKI   ("700694946503720992"),
         ACL_WEK     ("778000167516373012"),
-        OGLOSZENIA  ("700670367131500624");
+        OGLOSZENIA  ("700670367131500624"),
+        PRIV_DIRECT ("784106290523537438"),
+        SIM_GRID    ("767804272057909258");
 
         private final String id;
 

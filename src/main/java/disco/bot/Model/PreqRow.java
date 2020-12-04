@@ -1,4 +1,4 @@
-package disco.bot;
+package disco.bot.Model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

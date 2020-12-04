@@ -1,4 +1,4 @@
-package disco.bot;
+package disco.bot.Services.Web;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -9,7 +9,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.*;
 
-class FIETParser {
+public class FIETParser {
 
     private static Map<String, String> cookies;
     static {
@@ -22,7 +22,7 @@ class FIETParser {
     }
 
 
-    static List<String> parseFIETServer() throws IOException {
+    public static List<String> parseFIETServer() throws IOException {
         String link = "http://managerdc5.rackservice.org:50925/lapstat";
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
@@ -101,4 +101,8 @@ class FIETParser {
             return label;
         }
     }
+}
+
+interface Label {
+    String getLabel();
 }
