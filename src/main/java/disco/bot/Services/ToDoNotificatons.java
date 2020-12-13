@@ -25,11 +25,11 @@ public class ToDoNotificatons {
     }
 
     private static List<String> getHoursByDaysRemaining(long days ) {
-        return days > 4 ? Collections.singletonList("18") :
-               days > 3 ? Arrays.asList("12", "18") :
-               days > 2 ? Arrays.asList("12", "15", "18") :
-               days > 1 ? Arrays.asList("9", "12", "15", "18") :
-                       Arrays.asList("9", "12", "15", "18", "21");
+        return days < 2 ? Arrays.asList("9", "12", "15", "18", "21") :
+               days < 3 ? Arrays.asList("9", "12", "15", "18") :
+               days < 4 ? Arrays.asList("12", "15", "18") :
+               days < 5 ? Arrays.asList("12", "18") :
+                       Collections.singletonList("18");
     }
 
     private static Date extractDay( String str ) throws ParseException {
@@ -38,6 +38,6 @@ public class ToDoNotificatons {
         String[] dividersToBeReplaced = {".", "/"};
         return m.find() ? new SimpleDateFormat("dd-MM-yyyy").parse(
                 StringUtils.replaceEach( m.group(1), dividersToBeReplaced, Collections.nCopies(dividersToBeReplaced.length, "-").toArray(new String[dividersToBeReplaced.length])) )
-                : DateUtils.addDays(new Date(), 4);
+                : DateUtils.addDays(new Date(), 6);
     }
 }

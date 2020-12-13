@@ -23,7 +23,7 @@ public class FIETParser {
 
 
     public static List<String> parseFIETServer() throws IOException {
-        String link = "http://managerdc5.rackservice.org:50925/lapstat";
+        String link = "http://managerdc5.rackservice.org:50925/lapstat?track=lilski_road_america&cars=bmw_z4_gt3,ks_audi_r8_lms_2016,ks_ferrari_488_gt3,ks_lamborghini_huracan_gt3,ks_mercedes_amg_gt3&valid=1,2&date_from=&date_to=";
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
                 .cookies(cookies)

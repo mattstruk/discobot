@@ -40,10 +40,6 @@ public class ACLParser {
             return msg;
     }
 
-    public static void main(String[] args) throws IOException {
-        System.out.println( getACLWEKPreq(1) );
-    }
-
     public static String getACLWEKPreq(int roundID) throws IOException {
         String preqUrl = "https://acleague.com.pl/sezonac17-runda" + roundID + "-wyniki.html";
         Document preqDoc = org.jsoup.Jsoup.connect(preqUrl).ignoreContentType(true).execute().bufferUp().parse();

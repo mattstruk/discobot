@@ -12,7 +12,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
@@ -31,7 +30,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,8 +67,8 @@ public class Bot {
                 .on(ReadyEvent.class)
                 .subscribe(event -> {
                     User self = event.getSelf();
-                    System.out.println(String.format("Logged in as %s#%s", self.getUsername(), self.getDiscriminator()));
-                    System.out.println( "Wersja z 4 grudnia 2020 21:50" );
+                    System.out.println(String.format("Logged in as %s#%s.", self.getUsername(), self.getDiscriminator()));
+                    System.out.println( "Wersja z 12 grudnia 2020 13:00." );
                 });
 
         /** Reactions event listener
@@ -350,7 +348,7 @@ public class Bot {
     }
 
     private static boolean isTimeMatching(String[] currentTime, int hour ) {
-        return ( currentTime[0].equals( String.valueOf( hour ) ) && ( currentTime[1].equals("00") || currentTime[1].equals("01") || currentTime[1].equals("02")  ) );
+        return ( currentTime[0].equals( String.format("%02d", hour) ) && ( currentTime[1].equals("00") || currentTime[1].equals("01") || currentTime[1].equals("02")  ) );
     }
 
     private static boolean hasReactedBefore( ReactionAddEvent event, List<Bot.Reactions> ankietyAllowedReactions, int countOfReactions ) throws InterruptedException {
