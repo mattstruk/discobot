@@ -10,12 +10,17 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.event.domain.message.ReactionAddEvent;
+import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
+import discord4j.rest.http.client.ClientException;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +60,7 @@ public class Bot {
     public static void main(String[] args) throws InterruptedException  {
 
         Random random = new Random();
+        AtomicInteger round = new AtomicInteger(2);
         final boolean[] luka = {false};
         List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
         List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
@@ -131,33 +138,7 @@ public class Bot {
 
                     try {
 
-                        if (msg.equals("!preqwek")) createMessage(event, codeBlockWrapper(ACLParser.getACLWEKPreq(1)));
-
-                        if (msg.contains("!preqwekr0"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLWEKPreq(0)));
-
-                        if (msg.equals("!preqgt4")) createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(5)));
-
-                        if (msg.contains("!preqgt4r0"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(0)));
-
-                        if (msg.contains("!preqgt4r1"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(1)));
-
-                        if (msg.contains("!preqgt4r2"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(2)));
-
-                        if (msg.contains("!preqgt4r3"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(3)));
-
-                        if (msg.contains("!preqgt4r4"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(4)));
-
-                        if (msg.contains("!preqgt4r5"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(5)));
-
-                        if (msg.contains("!preqgt4r6"))
-                            createMessage(event, codeBlockWrapper(ACLParser.getACLGT4Preq(6)));
+                        if (msg.equals("!preqwek")) createMessage(event, codeBlockWrapper(ACLParser.getACLWEKPreq(round.intValue())));
 
                         if (msg.contains("!generalkagt4")) {
                             createMessage(event, codeBlockWrapper(ACLParser.getACLGT4DriverStandings()));
@@ -168,6 +149,15 @@ public class Bot {
                     }
 
                     if ( msg.equals("!roll") ) rollTheDice( event, random );
+
+                    if (msg.contains("!dodajevent")) addToCalendar(event, "event");
+
+                    if( msg.contains("!dodajwyscig")) addToCalendar(event, "race");
+
+                    if( msg.contains("!dodajzadanie")) addTask(event);
+
+                    if( msg.contains("!setround")) round.set(setRound(event));
+
                 });
 
         try {
@@ -211,6 +201,60 @@ public class Bot {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private static void addToCalendar(MessageCreateEvent event, String mode){
+
+        List<MessageData> calendarmsg = client.getRestClient()
+                .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
+                .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+
+        String content = "";
+        if(mode == "event") content = "\n**" + event.getMessage().getContent().substring(12) + "**";
+        else if(mode == "race") content = event.getMessage().getContent().substring(13);
+
+        client.getRestClient()
+                .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
+                .createMessage(calendarmsg.get(calendarmsg.size()-1).content() + "\n" + content).subscribe();
+
+        Mono.just(event.getMessage())
+                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.KALENDARZ.getId()), Snowflake.of(calendarmsg.get(calendarmsg.size()-1).id()))
+                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
+                        .flatMap(Message::delete))
+                .subscribe();
+
+        createMessage(event, "Dodano zawartość do kalendarza");
+    }
+
+    private static void addTask(MessageCreateEvent event){
+
+        List<MessageData> todomsg = client.getRestClient()
+                .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+                .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+
+        String content = event.getMessage().getContent().substring(14);
+
+        client.getRestClient()
+                .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+                .createMessage(todomsg.get(todomsg.size()-1).content() + "\n• " + content).subscribe();
+
+        Mono.just(event.getMessage())
+                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.TODO.getId()), Snowflake.of(todomsg.get(todomsg.size()-1).id()))
+                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
+                        .flatMap(Message::delete))
+                .subscribe();
+
+        createMessage(event, "Dodano zadanie");
+    }
+
+    private static int setRound(MessageCreateEvent event){
+        Mono.just(event.getMessage())
+                .flatMap(e -> client.getMessageById(event.getMessage().getChannelId(), event.getMessage().getId())
+                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
+                        .flatMap(Message::delete))
+                .subscribe();
+        return Integer.parseInt(event.getMessage().getContent().substring(10));
 
     }
 
@@ -439,7 +483,10 @@ public class Bot {
         POGADANKI   ("700694946503720992"),
         ACL_WEK     ("778000167516373012"),
         OGLOSZENIA  ("700670367131500624"),
+        KALENDARZ   ("767789225458270227"),
         PRIV_DIRECT ("784106290523537438"),
+        TEST_CHNL   ("787522026348478484"),
+        TEST_TODO   ("787553581208961044"),
         SIM_GRID    ("767804272057909258");
 
         private final String id;
