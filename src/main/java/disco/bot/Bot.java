@@ -68,7 +68,7 @@ public class Bot {
                 .subscribe(event -> {
                     User self = event.getSelf();
                     System.out.println(String.format("Logged in as %s#%s.", self.getUsername(), self.getDiscriminator()));
-                    System.out.println( "Wersja z 12 grudnia 2020 13:00." );
+                    System.out.println( "Wersja z 13 grudnia 2020 11:30." );
                 });
 
         /** Reactions event listener
@@ -148,9 +148,9 @@ public class Bot {
 
                     if ( msg.equals("!roll") ) rollTheDice( event, random );
 
-                    if (msg.contains("!dodajevent")) addToCalendar(event, "event");
+                    if (msg.contains("!dodajevent")) addToCalendar(event);
 
-                    if( msg.contains("!dodajwyscig")) addToCalendar(event, "race");
+                    if( msg.contains("!dodajwyscig")) addToCalendar(event);
 
                     if( msg.contains("!dodajzadanie")) addTask(event);
 
@@ -202,15 +202,13 @@ public class Bot {
 
     }
 
-    private static void addToCalendar(MessageCreateEvent event, String mode){
+    private static void addToCalendar(MessageCreateEvent event){
 
         List<MessageData> calendarmsg = client.getRestClient()
                 .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
                 .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
-        String content = "";
-        if(mode == "event") content = "\n**" + event.getMessage().getContent().substring(12) + "**";
-        else if(mode == "race") content = event.getMessage().getContent().substring(13);
+        String content = getContentWithoutCommand(event);
 
         client.getRestClient()
                 .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
@@ -225,13 +223,17 @@ public class Bot {
         createMessage(event, "Dodano zawartość do kalendarza");
     }
 
+    private static String getContentWithoutCommand(MessageCreateEvent event) {
+        return StringUtils.substringAfter( event.getMessage().getContent(), StringUtils.SPACE );
+    }
+
     private static void addTask(MessageCreateEvent event){
 
         List<MessageData> todomsg = client.getRestClient()
                 .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
                 .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
-        String content = event.getMessage().getContent().substring(14);
+        String content = getContentWithoutCommand(event);
 
         client.getRestClient()
                 .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
@@ -252,7 +254,7 @@ public class Bot {
                         .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
                         .flatMap(Message::delete))
                 .subscribe();
-        return Integer.parseInt(event.getMessage().getContent().substring(10));
+        return Integer.parseInt(getContentWithoutCommand(event));
 
     }
 
