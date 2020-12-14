@@ -202,11 +202,7 @@ public class MiddleFingerAlphabet {
         for (int i = 0; i < str.length(); i++) {
             String c = String.valueOf(str.charAt(i));
             String space = "  ";
-            if (i != 0 && c.equalsIgnoreCase("a")){
-                firstLine += String.format(map.get(c).getFirst().replaceAll("[.]", " ") + space, MIDDLE_FINGER);
-            } else {
-                firstLine += String.format(map.get(c).getFirst() + space, MIDDLE_FINGER);
-            }
+            firstLine += String.format(map.get(c).getFirst() + space, MIDDLE_FINGER);
             secondLine += String.format(map.get(c).getSecond() + space, MIDDLE_FINGER);
             thirdLine += String.format(map.get(c).getThird() + space, MIDDLE_FINGER);
             fourthLine += String.format(map.get(c).getFourth() + space, MIDDLE_FINGER);

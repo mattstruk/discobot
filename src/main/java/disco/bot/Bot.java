@@ -30,6 +30,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,7 +70,7 @@ public class Bot {
                 .subscribe(event -> {
                     User self = event.getSelf();
                     System.out.println(String.format("Logged in as %s#%s.", self.getUsername(), self.getDiscriminator()));
-                    System.out.println( "Wersja z 13 grudnia 2020 11:30." );
+                    System.out.println( "Wersja z 13 grudnia 2020 19:50." );
                 });
 
         /** Reactions event listener
@@ -148,13 +150,15 @@ public class Bot {
 
                     if ( msg.equals("!roll") ) rollTheDice( event, random );
 
-                    if (msg.contains("!dodajevent")) addToCalendar(event);
+                    if (msg.contains("!dodajevent") || msg.contains("!dodajwyscig")) modifyMessage(event, Bot::createMessage, "Dodano zawartość do kalendarza", null, ChannelsId.KALENDARZ);
 
-                    if( msg.contains("!dodajwyscig")) addToCalendar(event);
-
-                    if( msg.contains("!dodajzadanie")) addTask(event);
+                    if( msg.contains("!dodajzadanie")) modifyMessage(event, Bot::createMessage, "Dodano zawartość do kalendarza", null, ChannelsId.TODO);
 
                     if( msg.contains("!setround")) round.set(setRound(event));
+
+                    if ( msg.contains("!usunzadanie")) modifyMessage(event, Bot::createMessage, "Dodano zawartość do kalendarza", Bot::deletedIndexes, ChannelsId.TODO);
+
+                    if ( msg.contains("!usunkalendarz")) modifyMessage(event, Bot::createMessage, "Dodano zawartość do kalendarza", Bot::deletedIndexes, ChannelsId.KALENDARZ);
 
                 });
 
@@ -202,50 +206,43 @@ public class Bot {
 
     }
 
-    private static void addToCalendar(MessageCreateEvent event){
+    private static String deletedIndexes(String lastMessage, String indexes) {
+        indexes = indexes.trim().replaceAll("[^0-9;]", "");
+        List<Integer> listOfIndexes = Stream.of( indexes.split(";") ).map(Integer::parseInt).collect(Collectors.toList());
+        return Stream.of( lastMessage.split("\n") )
+                .filter( s -> listOfIndexes.stream().noneMatch(i -> s.contains(String.format("[%d]", i))))
+                .collect(Collectors.joining("\n"));
+    }
 
-        List<MessageData> calendarmsg = client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
-                .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
-
-        String content = getContentWithoutCommand(event);
-
-        client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
-                .createMessage(calendarmsg.get(calendarmsg.size()-1).content() + "\n" + content).subscribe();
-
-        Mono.just(event.getMessage())
-                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.KALENDARZ.getId()), Snowflake.of(calendarmsg.get(calendarmsg.size()-1).id()))
-                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
-                        .flatMap(Message::delete))
-                .subscribe();
-
-        createMessage(event, "Dodano zawartość do kalendarza");
+    private static String addIndexes(String str ) {
+        List<String> singleLine = Stream.of( str.split("\n") ).collect(Collectors.toList());
+        return singleLine.stream().map( s -> StringUtils.isNotBlank(s) ? String.format("[%-2d]", singleLine.indexOf(s)) + s.replaceAll( "(\\[\\d{1,3}])","") : "" ).collect(Collectors.joining("\n"));
     }
 
     private static String getContentWithoutCommand(MessageCreateEvent event) {
         return StringUtils.substringAfter( event.getMessage().getContent(), StringUtils.SPACE );
     }
 
-    private static void addTask(MessageCreateEvent event){
-
-        List<MessageData> todomsg = client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+    private static void modifyMessage(MessageCreateEvent event, BiConsumer<MessageCreateEvent, String> messageMethod, String messageBody, BiFunction<String, String, String> getContent, ChannelsId channelsId) {
+        List<MessageData> lastMessages = client.getRestClient()
+                .getChannelById(Snowflake.of(channelsId.getId()))
                 .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
-        String content = getContentWithoutCommand(event);
+        String content = getContent != null
+                ? addIndexes( getContent.apply( lastMessages.get( lastMessages.size()-1 ).content(), getContentWithoutCommand(event) ) )
+                : addIndexes( lastMessages.get( lastMessages.size() -1  ) + "\n " + getContentWithoutCommand( event ));
 
         client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
-                .createMessage(todomsg.get(todomsg.size()-1).content() + "\n• " + content).subscribe();
+                .getChannelById(Snowflake.of(channelsId.getId()))
+                .createMessage(content).subscribe();
 
         Mono.just(event.getMessage())
-                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.TODO.getId()), Snowflake.of(todomsg.get(todomsg.size()-1).id()))
+                .flatMap(e -> client.getMessageById(Snowflake.of(channelsId.getId()), Snowflake.of(lastMessages.get(lastMessages.size()-1).id()))
                         .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
                         .flatMap(Message::delete))
                 .subscribe();
 
-        createMessage(event, "Dodano zadanie");
+        messageMethod.accept( event, messageBody );
     }
 
     private static int setRound(MessageCreateEvent event){
