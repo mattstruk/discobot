@@ -1,5 +1,6 @@
 package disco.bot;
 
+import disco.bot.Services.CalendarNotifications;
 import disco.bot.Services.MiddleFingerAlphabet;
 import disco.bot.Services.ToDoNotificatons;
 import disco.bot.Services.Web.ACLParser;
@@ -12,7 +13,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.json.MessageData;
@@ -31,7 +31,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,14 +63,16 @@ public class Bot {
         final boolean[] luka = {false};
         List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
         List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
+        CalendarNotifications calendar = new CalendarNotifications();
 
         client.getEventDispatcher()
                 .on(ReadyEvent.class)
                 .subscribe(event -> {
                     User self = event.getSelf();
                     System.out.println(String.format("Logged in as %s#%s", self.getUsername(), self.getDiscriminator()));
-                    System.out.println( "Wersja z 4 grudnia 2020 21:50" );
+                    System.out.println( "Wersja z 14 grudnia 2020 01:30" );
                 });
+
 
         /** Reactions event listener
          */
@@ -158,6 +159,23 @@ public class Bot {
 
                     if( msg.contains("!setround")) round.set(setRound(event));
 
+                    if( msg.equals("!refreshcalendar")){
+
+                        //calendar.printRacesList(calendar.getRaceList());
+                    }
+
+                    if(msg.equals("!listasezonow")){
+                        calendar.setSeasonList(calendar.parseSeasonList(event, client));
+                        createMessage(event, calendar.printSeasonList(calendar.getSeasonList()));
+                    }
+
+                    if(msg.equals("!nextrace")){
+                        calendar.setSeasonList(calendar.parseSeasonList(event, client));
+                        calendar.setRaceList(calendar.parseRacesList(calendar.getSeasonList()));
+                        Collections.sort(calendar.getRaceList());
+                        createMessage(event, calendar.printSortedRacesList(calendar.getRaceList(), 4));
+                    }
+
                 });
 
         try {
@@ -214,15 +232,28 @@ public class Bot {
         if(mode == "event") content = "\n**" + event.getMessage().getContent().substring(12) + "**";
         else if(mode == "race") content = event.getMessage().getContent().substring(13);
 
-        client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
-                .createMessage(calendarmsg.get(calendarmsg.size()-1).content() + "\n" + content).subscribe();
+        if(!calendarmsg.isEmpty()) {
+            client.getRestClient()
+                    .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
+                    .createMessage(calendarmsg.get(calendarmsg.size() - 1).content() + "\n" + content).subscribe();
 
-        Mono.just(event.getMessage())
-                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.KALENDARZ.getId()), Snowflake.of(calendarmsg.get(calendarmsg.size()-1).id()))
-                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
-                        .flatMap(Message::delete))
-                .subscribe();
+            Mono.just(event.getMessage())
+                    .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.KALENDARZ.getId()), Snowflake.of(calendarmsg.get(calendarmsg.size() - 1).id()))
+                            .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
+                            .flatMap(Message::delete))
+                    .subscribe();
+        }
+        else{
+            if(mode == "event"){
+                client.getRestClient()
+                        .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
+                        .createMessage(content.replace("\n", "") + "\n").subscribe();
+            }
+            else{
+                createMessage(event, "Najpierw musisz dodać event! " + Reactions.MIDDLE_FINGER.getValue());
+                return;
+            }
+        }
 
         createMessage(event, "Dodano zawartość do kalendarza");
     }
@@ -235,15 +266,22 @@ public class Bot {
 
         String content = event.getMessage().getContent().substring(14);
 
-        client.getRestClient()
-                .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
-                .createMessage(todomsg.get(todomsg.size()-1).content() + "\n• " + content).subscribe();
+        if(!todomsg.isEmpty()) {
+            client.getRestClient()
+                    .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+                    .createMessage(todomsg.get(todomsg.size() - 1).content() + "\n• " + content).subscribe();
 
-        Mono.just(event.getMessage())
-                .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.TODO.getId()), Snowflake.of(todomsg.get(todomsg.size()-1).id()))
-                        .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
-                        .flatMap(Message::delete))
-                .subscribe();
+            Mono.just(event.getMessage())
+                    .flatMap(e -> client.getMessageById(Snowflake.of(ChannelsId.TODO.getId()), Snowflake.of(todomsg.get(todomsg.size() - 1).id()))
+                            .onErrorResume(ClientException.isStatusCode(HttpResponseStatus.FORBIDDEN.code()), err -> Mono.empty())
+                            .flatMap(Message::delete))
+                    .subscribe();
+        }
+        else {
+            client.getRestClient()
+                    .getChannelById(Snowflake.of(ChannelsId.TODO.getId()))
+                    .createMessage("• " + content).subscribe();
+        }
 
         createMessage(event, "Dodano zadanie");
     }
@@ -476,7 +514,7 @@ public class Bot {
         createMessage( event, finalMessage );
     }
 
-    enum ChannelsId {
+    public enum ChannelsId {
         ANKIETY     ("767774988354453515"),
         TODO        ("767780095846776833"),
         LINKS       ("735196193964949606"),
