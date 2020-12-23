@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ToDoNotificatons {
+public class ToDoNotificationService {
 
     public static String notifications(String str, String hour) throws ParseException {
         String returnMessage = "";

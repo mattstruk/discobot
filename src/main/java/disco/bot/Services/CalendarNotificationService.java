@@ -7,18 +7,15 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.discordjson.json.MessageData;
+import lombok.Data;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class CalendarNotifications {
-    List<Season> seasonList = new ArrayList<>();
-    List<Race> raceList = new ArrayList<>();
+@Data
+public class CalendarNotificationService {
+    private List<Season> seasonList = new ArrayList<>();
+    private List<Race> raceList = new ArrayList<>();
 
     public List<Season> parseSeasonList(MessageCreateEvent event, GatewayDiscordClient client){
         List<Season> tempList = new ArrayList<>();
@@ -131,21 +128,5 @@ public class CalendarNotifications {
     private static int countLines(String str){
         String[] lines = str.split("\n");
         return  lines.length;
-    }
-
-    public List<Season> getSeasonList() {
-        return seasonList;
-    }
-
-    public void setSeasonList(List<Season> seasonList) {
-        this.seasonList = seasonList;
-    }
-
-    public List<Race> getRaceList() {
-        return raceList;
-    }
-
-    public void setRaceList(List<Race> raceList) {
-        this.raceList = raceList;
     }
 }

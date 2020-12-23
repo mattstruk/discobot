@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MiddleFingerAlphabet {
+public class MiddleFingerAlphabetService {
     private static String firstLine = "";
     private static String secondLine = "";
     private static String thirdLine = "";
@@ -195,18 +195,14 @@ public class MiddleFingerAlphabet {
         List<String> fiverLiner = new ArrayList<>();
 
         str = StringUtils.replaceEach(str,
-                new String[] {"lucjan", "!fuckertext", "x" , "q", "[^a-zA-Z ]", "lucek", "ą", "ć", "ę", "ł", "ń", "ó", "ś", "ż", "ź"},
-                new String[] {"luka"  , ""           , "ks", "ku" , ""          , "luka",  "a", "c" , "e", "l", "n", "o", "s", "z", "z" })
+                new String[] {"lucjan", "!fuckertext", "x" , "q", "[^a-zA-Z ]", "lucek", "ą", "ć", "ę", "ł", "ń", "ó", "ś", "ż", "ź", "prochnica"},
+                new String[] {"luka"  , ""           , "ks", "ku" , ""          , "luka",  "a", "c" , "e", "time", "n", "o", "s", "z", "z", "luka" })
                 .toLowerCase().trim();
 
         for (int i = 0; i < str.length(); i++) {
             String c = String.valueOf(str.charAt(i));
             String space = "  ";
-            if (i != 0 && c.equalsIgnoreCase("a")){
-                firstLine += String.format(map.get(c).getFirst().replaceAll("[.]", " ") + space, MIDDLE_FINGER);
-            } else {
-                firstLine += String.format(map.get(c).getFirst() + space, MIDDLE_FINGER);
-            }
+            firstLine += String.format(map.get(c).getFirst() + space, MIDDLE_FINGER);
             secondLine += String.format(map.get(c).getSecond() + space, MIDDLE_FINGER);
             thirdLine += String.format(map.get(c).getThird() + space, MIDDLE_FINGER);
             fourthLine += String.format(map.get(c).getFourth() + space, MIDDLE_FINGER);

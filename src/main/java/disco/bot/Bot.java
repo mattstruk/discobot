@@ -1,8 +1,8 @@
 package disco.bot;
 
-import disco.bot.Services.CalendarNotifications;
-import disco.bot.Services.MiddleFingerAlphabet;
-import disco.bot.Services.ToDoNotificatons;
+import disco.bot.Services.CalendarNotificationService;
+import disco.bot.Services.MiddleFingerAlphabetService;
+import disco.bot.Services.ToDoNotificationService;
 import disco.bot.Services.Web.ACLParser;
 import disco.bot.Services.Web.FIETParser;
 import discord4j.common.util.Snowflake;
@@ -63,18 +63,18 @@ public class Bot {
         final boolean[] luka = {false};
         List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
         List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
-        CalendarNotifications calendar = new CalendarNotifications();
+        CalendarNotificationService calendar = new CalendarNotificationService();
 
         client.getEventDispatcher()
                 .on(ReadyEvent.class)
                 .subscribe(event -> {
                     User self = event.getSelf();
                     System.out.println(String.format("Logged in as %s#%s", self.getUsername(), self.getDiscriminator()));
-                    System.out.println( "Wersja z 14 grudnia 2020 01:30" );
+                    System.out.println( "Wersja z 20 grudnia 2020 12:15" );
                 });
 
 
-        /** Reactions event listener
+        /** Reaction event listener
          */
         client.getEventDispatcher().on(ReactionAddEvent.class).subscribe(event -> {
             int countOfReactions = event.getMessage().block().getReactions().stream().mapToInt(Reaction::getCount).sum();
@@ -113,9 +113,9 @@ public class Bot {
 
                     if ( StringUtils.isBlank( msg )) return;
 
-                    if ( msg.equals("!dubson") ) createMessage( event, MiddleFingerAlphabet.printFuckerText( "dubson" ) );
+                    if ( msg.equals("!dubson") ) createMessage( event, MiddleFingerAlphabetService.printFuckerText( "dubson" ) );
 
-                    if ( msg.equals("!luka") )createMessage( event, MiddleFingerAlphabet.printFuckerText( "luka" ) );
+                    if ( msg.equals("!luka") )createMessage( event, MiddleFingerAlphabetService.printFuckerText( "luka" ) );
 
                     if ( !msg.equalsIgnoreCase("!maser") &&
                             authorId(event).equals(UserId.LUKA.id) &&
@@ -201,7 +201,7 @@ public class Bot {
 
                     if (listMono != null) {
                         try {
-                            String getMessage = ToDoNotificatons.notifications(listMono.get(0).content(), currentTime[0]);
+                            String getMessage = ToDoNotificationService.notifications(listMono.get(0).content(), currentTime[0]);
                             if (StringUtils.isNotBlank( getMessage ))
                                 client.getRestClient()
                                         .getChannelById(Snowflake.of(Bot.ChannelsId.POGADANKI.getId()))
@@ -229,8 +229,8 @@ public class Bot {
                 .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
         String content = "";
-        if(mode == "event") content = "\n**" + event.getMessage().getContent().substring(12) + "**";
-        else if(mode == "race") content = event.getMessage().getContent().substring(13);
+        if(mode.equals("event")) content = "\n**" + event.getMessage().getContent().substring(12) + "**";
+        else if(mode.equals("race")) content = event.getMessage().getContent().substring(13);
 
         if(!calendarmsg.isEmpty()) {
             client.getRestClient()
@@ -244,7 +244,7 @@ public class Bot {
                     .subscribe();
         }
         else{
-            if(mode == "event"){
+            if(mode.equals("event")){
                 client.getRestClient()
                         .getChannelById(Snowflake.of(ChannelsId.KALENDARZ.getId()))
                         .createMessage(content.replace("\n", "") + "\n").subscribe();
@@ -430,7 +430,7 @@ public class Bot {
     }
 
     private static void convertTextToFuckers( MessageCreateEvent event, String message ) {
-        String fuckerText = MiddleFingerAlphabet.printFuckerText( message );
+        String fuckerText = MiddleFingerAlphabetService.printFuckerText( message );
         if (fuckerText.length() >= 2000) {
             createMessage( event, "Wyszło ponad 2000 znaków :( " + Reactions.MIDDLE_FINGER.getValue() );
         } else {
@@ -572,8 +572,6 @@ public class Bot {
         WHATEVER             ("\uD83E\uDD37\u200D♂️"),
         FACEPALM             ("\uD83E\uDD26\u200D♂️"),
         LOCKED               ("\uD83D\uDD10");
-
-
 
         private final String id;
 

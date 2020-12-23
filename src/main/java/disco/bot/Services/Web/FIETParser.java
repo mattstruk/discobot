@@ -24,16 +24,17 @@ public class FIETParser {
 
     public static List<String> parseFIETServer() throws IOException {
         String link = "http://managerdc5.rackservice.org:50925/lapstat";
+        List<String> returnList = new ArrayList<>();
+
         Document doc = Jsoup.connect(link)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36")
                 .cookies(cookies)
+                .ignoreHttpErrors(true)
                 .execute()
                 .bufferUp()
                 .parse();
 
         Elements elements = doc.select("tbody > tr");
-
-        List<String> returnList = new ArrayList<>();
 
         String message = "**Nowy bestlap**:\n";
 
@@ -48,6 +49,7 @@ public class FIETParser {
         } else {
             return Collections.emptyList();
         }
+
 
         return returnList;
     }
