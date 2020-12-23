@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 @SpringBootApplication
 public class JavacordBot {
@@ -23,13 +24,13 @@ public class JavacordBot {
     public static DiscordApi api;
 
     static {
-        try { api = DiscordMessageService.init(); } catch (IOException e) { e.printStackTrace(); }
+        try { api = DiscordMessageService.init(); System.out.println("Javacord 20.12.2020 20:45"); } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         SpringApplication.run(JavacordBot.class, args);
 
-        List<String> users = Arrays.asList("405052679182745620", "320695302841434112");
+        List<UserId> users = Arrays.asList( UserId.DUBSON, UserId.JARZOMB, UserId.LUKA, UserId.MANIAK, UserId.MATEUSZ, UserId.LUCJAN );
         List<Reaction> defaultReactions = Arrays.asList( Reaction.THUMBS_UP , Reaction.THUMBS_DOWN, Reaction.WHATEVER, Reaction.FACEPALM );
         List<Reaction> lukaReactions = Arrays.asList( Reaction.TRACTOR, Reaction.MIDDLE_FINGER, Reaction.MIDDLE_FINGER_TONE_1, Reaction.MIDDLE_FINGER_TONE_2, Reaction.MIDDLE_FINGER_TONE_3, Reaction.MIDDLE_FINGER_TONE_4, Reaction.MIDDLE_FINGER_TONE_5, Reaction.POOP, Reaction.TOILET );
         List<String> maser = Arrays.asList("Lucjan Próchnica", "Adam Dubiel", "Patryk Pyrchla", "Paweł Jarzębowski", "Mateusz Książek");
@@ -56,13 +57,14 @@ public class JavacordBot {
             } catch (IOException e) { e.printStackTrace(); }
 
             if ( Discord.compareChannels( ChannelId.PRIV_DIRECT.getId(), event ) ) DiscordMessageService.createMessage( api, ChannelIdResolver.getChannel( event, CHANNEL_DIVIDER ), StringUtils.substringAfter( Discord.getMsg( event ), CHANNEL_DIVIDER) );
+            if ( lukaFuckLever[0] ) DiscordMessageService.addFuckersForUserMessages( event, UserId.LUKA );
+            if (  Stream.of("maser", "maserati", "itaresam", "masser").anyMatch( event.getMessageContent()::contains )) DiscordMessageService.addReactionsForEachKeyword( event, UserId.LUKA, lukaReactions );
 
             DiscordReactionService.addDefaultVotingReactions( event, ChannelId.ANKIETY.getId(), defaultReactions );
         });
 
         api.addReactionAddListener(event -> {
 
-            if ( lukaFuckLever[0] ) DiscordReactionService.addFuckersForUserMessages( event, UserId.LUKA, lukaReactions );
             DiscordReactionService.removeForbiddenReactions( defaultReactions, event, ChannelId.ANKIETY.getId() );
             DiscordReactionService.removeRedundantReactions( event,  ChannelId.ANKIETY.getId() );
             DiscordReactionService.makeAnnouncementWhenAllVoted( event, ChannelId.ANKIETY.getId(), ChannelId.OGLOSZENIA.getId(), users, "Wyniki ankiety pt. ", api );

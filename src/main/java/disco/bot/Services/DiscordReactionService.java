@@ -3,8 +3,8 @@ package disco.bot.Services;
 import disco.bot.Discord.Reaction;
 import disco.bot.Discord.UserId;
 import disco.bot.JavacordBot;
-import disco.bot.Utils.TextFormatter;
 import disco.bot.Utils.Discord;
+import disco.bot.Utils.TextFormatter;
 import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -31,8 +31,8 @@ public class DiscordReactionService {
         }
     }
 
-    public static void makeAnnouncementWhenAllVoted( ReactionAddEvent event, String channelForVoting, String channelForAnnoucement, List<String> users, String annoucement, DiscordApi api ) {
-        if ( isntLocked( event, api ) && hasEveryoneVoted( event, users ) ) {
+    public static void makeAnnouncementWhenAllVoted(ReactionAddEvent event, String channelForVoting, String channelForAnnoucement, List<UserId> users, String annoucement, DiscordApi api ) {
+        if ( Discord.compareChannels( channelForVoting, event ) && isntLocked( event, api ) && hasEveryoneVoted( event, users ) ) {
             annoucement += TextFormatter.boldWrapper( getContent( event ) ) + ":\n" + listAllReactions( event );
             DiscordMessageService.createMessage(api, channelForAnnoucement, annoucement);
             event.addReactionsToMessage( Reaction.LOCKED.getValue() );
@@ -44,7 +44,7 @@ public class DiscordReactionService {
             defaultReactions.forEach( reaction -> event.getMessage().addReaction( reaction.getValue() ) );
     }
 
-    private static boolean hasEveryoneVoted( ReactionAddEvent event, List<String> users ) {
+    private static boolean hasEveryoneVoted( ReactionAddEvent event, List<UserId> users ) {
         return getReactions( event )
                 .stream()
                 .flatMap( reaction -> {
@@ -55,7 +55,7 @@ public class DiscordReactionService {
                     }
                     return null;
                 }).map(user -> String.valueOf( user.getId() ) )
-                .collect(Collectors.toSet()).stream().filter( users::contains ).count() == users.size();
+                .collect(Collectors.toSet()).stream().filter( r -> users.stream().map( UserId::getId ).collect(Collectors.toList()).contains( r ) ).count() == users.size();
     }
 
     private static boolean isNotFirstReaction( ReactionAddEvent event ) {
@@ -113,10 +113,5 @@ public class DiscordReactionService {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void addFuckersForUserMessages( ReactionAddEvent event, UserId luka, List<Reaction> reactionList ) {
-        if ( Discord.isSameAuthor( event, luka ) && !reactionList.isEmpty() )
-            reactionList.forEach( reaction -> Discord.getMsg( event ).addReaction( reaction.getValue() ));
     }
 }

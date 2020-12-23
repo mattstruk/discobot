@@ -1,6 +1,6 @@
 package disco.bot.Services;
 
-import disco.bot.Bot;
+import disco.bot.Discord.ChannelId;
 import disco.bot.Model.Race;
 import disco.bot.Model.Season;
 import discord4j.common.util.Snowflake;
@@ -10,7 +10,8 @@ import discord4j.discordjson.json.MessageData;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class CalendarNotificationService {
@@ -26,7 +27,7 @@ public class CalendarNotificationService {
         int i=0,j=0, line=0, maxlines=0;
 
         List<MessageData> calendarmsg = client.getRestClient()
-                .getChannelById(Snowflake.of(Bot.ChannelsId.KALENDARZ.getId()))
+                .getChannelById(Snowflake.of(ChannelId.KALENDARZ.getId()))
                 .getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
 
         if(!calendarmsg.isEmpty()) {

@@ -1,6 +1,5 @@
 package disco.bot.Services;
 
-import disco.bot.Bot;
 import disco.bot.Discord.ChannelId;
 import disco.bot.JavacordBot;
 import disco.bot.Services.Web.FIETParser;
@@ -46,7 +45,7 @@ public class TaskSchedulerService {
                 Stream.of("03;12", "17;12", "07;01", "21;01", "04;02", "18;02", "04;03")
                         .map(s -> s.split(";"))
                         .anyMatch( dayMonth -> isDateMatching(currentTime, dayMonth[0], dayMonth[1] ) ) )  {
-            DiscordMessageService.createMessage( JavacordBot.api, Bot.ChannelsId.POGADANKI.getId(),"@everyone Przypomnienie o aktualizacji PLP przed dzisiejsza runda. Link do pobrania: https://tinyurl.com/y6zjrdv6");
+            DiscordMessageService.createMessage( JavacordBot.api, ChannelId.POGADANKI.getId(),"@everyone Przypomnienie o aktualizacji PLP przed dzisiejsza runda. Link do pobrania: https://tinyurl.com/y6zjrdv6");
         }
     }
 
@@ -63,7 +62,7 @@ public class TaskSchedulerService {
             try {
                 String getMessage = ToDoNotificationService.notifications( latestMessage, currentTime[0]);
                 if ( StringUtils.isNotBlank( getMessage ) )
-                    DiscordMessageService.createMessage( JavacordBot.api, Bot.ChannelsId.POGADANKI.getId(),"Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + getMessage);
+                    DiscordMessageService.createMessage( JavacordBot.api, ChannelId.POGADANKI.getId(),"Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + getMessage);
             } catch (ParseException e) {
                 e.printStackTrace();
             }

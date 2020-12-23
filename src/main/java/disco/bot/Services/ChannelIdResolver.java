@@ -1,6 +1,6 @@
 package disco.bot.Services;
 
-import disco.bot.Bot;
+import disco.bot.Discord.ChannelId;
 import disco.bot.Utils.Discord;
 import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -10,11 +10,11 @@ public class ChannelIdResolver {
         String identifier = StringUtils.substringBefore(Discord.getMsg( event ), divider ).toLowerCase();
         switch ( identifier ) {
             case "pogadanki":
-                return Bot.ChannelsId.POGADANKI.getId();
+                return ChannelId.POGADANKI.getId();
             case "simgrid":
-                return Bot.ChannelsId.SIM_GRID.getId();
+                return ChannelId.SIM_GRID.getId();
             case "acl-wek":
-                return Bot.ChannelsId.ACL_WEK.getId();
+                return ChannelId.ACL_WEK.getId();
             default:
                 return null;
         }

@@ -1,40 +1,20 @@
 package disco.bot;
 
 import disco.bot.Services.CalendarNotificationService;
-import disco.bot.Services.MiddleFingerAlphabetService;
-import disco.bot.Services.ToDoNotificationService;
-import disco.bot.Services.Web.ACLParser;
-import disco.bot.Services.Web.FIETParser;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.event.domain.message.ReactionAddEvent;
-import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
-import discord4j.discordjson.json.MessageData;
-import discord4j.rest.http.client.ClientException;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.lang.StrictMath.abs;
 
 public class Bot {
 
@@ -61,7 +41,7 @@ public class Bot {
         Random random = new Random();
         AtomicInteger round = new AtomicInteger(2);
         final boolean[] luka = {false};
-        List<Bot.Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
+        List<Reactions> ankietyAllowedReactions = Arrays.asList(Reactions.THUMBS_UP , Reactions.THUMBS_DOWN, Reactions.WHATEVER, Reactions.FACEPALM );
         List<String> commands = Arrays.asList("!dubson", "!luka", "!maser", "!losuj", "!ping", "!roll");
         CalendarNotificationService calendar = new CalendarNotificationService();
 

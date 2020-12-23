@@ -43,6 +43,10 @@ public class Discord {
         return String.valueOf( Discord.getMsg( event ).getUserAuthor().get().getId() ).equals( user.getId() );
     }
 
+    public static boolean isSameAuthor( MessageCreateEvent event, UserId user ) {
+        return String.valueOf( event.getMessageAuthor().getId() ).equals( user.getId() );
+    }
+
     public static String getLatestMsgAsString(DiscordApi api, ChannelId channelId ) {
         return getLatestMsgFromChannel( api, channelId ).getContent();
     }
