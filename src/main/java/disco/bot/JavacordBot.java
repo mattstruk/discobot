@@ -7,6 +7,7 @@ import disco.bot.Services.*;
 import disco.bot.Services.Web.ACLParser;
 import disco.bot.Utils.Discord;
 import disco.bot.Utils.TextFormatter;
+import disco.bot.Utils.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.DiscordApi;
 import org.springframework.boot.SpringApplication;
@@ -24,8 +25,7 @@ public class JavacordBot {
     public static DiscordApi api;
 
     static {
-        try { api = DiscordMessageService.init(); System.out.println("Javacord 20.12.2020 20:45"); } catch (IOException e) { e.printStackTrace();
-            System.out.println("xdxdxd");}
+        try { api = DiscordMessageService.init(); System.out.println(Utils.RED + "Wersja: Discobot Javacord 24.12.2020 12:50" + Utils.RESET); } catch (IOException e) { e.printStackTrace(); }
     }
 
     public static void main(String[] args) {

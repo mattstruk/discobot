@@ -20,7 +20,7 @@ public class DiscordReactionService {
 
     public static void removeForbiddenReactions( List<Reaction> ankietyAllowedReactions, ReactionAddEvent event, String channelId ) {
         String currentEmoji = event.getEmoji().asUnicodeEmoji().get();
-        if ( isHuman( event ) && !ankietyAllowedReactions.stream().map( Reaction::getValue ).collect(Collectors.toList()).contains( currentEmoji ) ) {
+        if ( Discord.compareChannels( channelId, event ) && isHuman( event ) && !ankietyAllowedReactions.stream().map( Reaction::getValue ).collect(Collectors.toList()).contains( currentEmoji ) ) {
             event.removeReaction();
         }
     }

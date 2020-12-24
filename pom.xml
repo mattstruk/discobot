@@ -29,7 +29,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <finalName>discobot</finalName>
                     <mainClass>disco.bot.JavacordBot</mainClass>
+                    <outputDirectory>Y:/discobot</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

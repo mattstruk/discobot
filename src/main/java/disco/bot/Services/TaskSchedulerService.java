@@ -51,7 +51,7 @@ public class TaskSchedulerService {
     @Scheduled(fixedRate = 59000)
     public void toDoReminder() {
         DateAndTime currentTime = new DateAndTime();
-        if ( currentTime.isCurrentHourInList( Arrays.asList(9, 12, 15, 18, 21) ) )
+        if ( !currentTime.isCurrentHourInList( Arrays.asList(9, 12, 15, 18, 21) ) )
             return;
 
         String latestMessage = Discord.getLatestMsgAsString( JavacordBot.api, ChannelId.TODO );
@@ -63,9 +63,7 @@ public class TaskSchedulerService {
             String getMessage = ToDoNotificationService.notifications( latestMessage, currentTime.getHour() );
             if ( StringUtils.isNotBlank( getMessage ) )
                 DiscordMessageService.createMessage( JavacordBot.api, ChannelId.POGADANKI.getId(),"Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n" + getMessage);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        } catch (ParseException e) { e.printStackTrace(); }
 
     }
 }
