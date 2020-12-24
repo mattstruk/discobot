@@ -24,7 +24,8 @@ public class JavacordBot {
     public static DiscordApi api;
 
     static {
-        try { api = DiscordMessageService.init(); System.out.println("Javacord 20.12.2020 20:45"); } catch (IOException e) { e.printStackTrace(); }
+        try { api = DiscordMessageService.init(); System.out.println("Javacord 20.12.2020 20:45"); } catch (IOException e) { e.printStackTrace();
+            System.out.println("xdxdxd");}
     }
 
     public static void main(String[] args) {
@@ -41,10 +42,14 @@ public class JavacordBot {
 
         api.addMessageCreateListener(event -> {
             // alphabetical order
+            if ( Discord.compareChannels( ChannelId.KOMENDY.getId(), event ) )
+                return;
+
             if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( api, ChannelId.POGADANKI, event, "Dodano zawartość do kalendarza" ) );
             if ( Discord.contains( event, "dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( api, ChannelId.POGADANKI, event, "Dodano zadanie") );
             if ( Discord.equals(   event, "!dubson" ) )         DiscordMessageService.createMessage( event, MiddleFingerAlphabetService.printFuckerText( "dubson" ) );
             if ( Discord.contains( event, "!fuckertext" ) )     DiscordMessageService.createMessage( event, FuckerTextResolver.convertTextToFuckers( Discord.getMsg( event ) ) );
+            if ( Discord.contains( event,"!losuj kierowcy:" ) ) DiscordMessageService.createMessage( event, RandomizerService.pickRandomTeams( event ) );
             if ( Discord.equals(   event, "!luka" ) )           DiscordMessageService.createMessage( event, MiddleFingerAlphabetService.printFuckerText( "luka") );
             if ( Discord.equals(   event, "!lukafuck" ) )       DiscordMessageService.createMessage( event, FuckerTextResolver.resolveLukaFuckAndGetMessage( lukaFuckLever, event ) );
             if ( Discord.equals(   event, "!maser" ) )          DiscordMessageService.createMessage( event, RandomizerService.getRandomDriver( maser ) );
@@ -58,7 +63,7 @@ public class JavacordBot {
 
             if ( Discord.compareChannels( ChannelId.PRIV_DIRECT.getId(), event ) ) DiscordMessageService.createMessage( api, ChannelIdResolver.getChannel( event, CHANNEL_DIVIDER ), StringUtils.substringAfter( Discord.getMsg( event ), CHANNEL_DIVIDER) );
             if ( lukaFuckLever[0] ) DiscordMessageService.addFuckersForUserMessages( event, UserId.LUKA );
-            if (  Stream.of("maser", "maserati", "itaresam", "masser").anyMatch( event.getMessageContent()::contains )) DiscordMessageService.addReactionsForEachKeyword( event, UserId.LUKA, lukaReactions );
+            if (  Stream.of("maser", "maserati", "itaresam", "masser").anyMatch( event.getMessageContent()::contains )) DiscordMessageService.addReactionsForEachKeyword( event, UserId.LUCJAN, lukaReactions );
 
             DiscordReactionService.addDefaultVotingReactions( event, ChannelId.ANKIETY.getId(), defaultReactions );
         });

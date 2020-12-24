@@ -12,7 +12,7 @@ public enum ChannelId {
     TEST_CHNL   ("787522026348478484"),
     TEST_TODO   ("787553581208961044"),
     SIM_GRID    ("767804272057909258"),
-    TEST        ("768847735095820369");
+    KOMENDY     ("768833864114110474");
 
     private final String id;
 
