@@ -1,11 +1,13 @@
 package disco.bot.Services.Web;
 
 import disco.bot.Model.PreqRow;
+import disco.bot.Utils.Utils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.Date;
 
 public class ACLParser {
 
@@ -40,11 +42,8 @@ public class ACLParser {
             return msg;
     }
 
-    public static void main(String[] args) throws IOException {
-        System.out.println( getACLWEKPreq(1) );
-    }
-
-    public static String getACLWEKPreq(int roundID) throws IOException {
+    public static String getACLWEKPreq() throws IOException {
+        int roundID = currentRoundResolver();
         String preqUrl = "https://acleague.com.pl/sezonac17-runda" + roundID + "-wyniki.html";
         Document preqDoc = org.jsoup.Jsoup.connect(preqUrl).ignoreContentType(true).execute().bufferUp().parse();
 //        System.out.println(preqDoc);
@@ -73,6 +72,14 @@ public class ACLParser {
             }
         }
         return msg;
+    }
+
+    private static int currentRoundResolver() {
+        return isBefore("07.01.2021" ) ? 3 :
+                isBefore("21.01.2021") ? 4 :
+                isBefore("04.02.2021") ? 5 :
+                isBefore("18.02.2021") ? 6 :
+                isBefore("04.03.2021") ? 7 : 1;
     }
 
 
@@ -158,6 +165,10 @@ public class ACLParser {
         msg += i.select("img[title]").first().attr("title") + " - ";
         msg += i.select("td").last().text() + "\n";
         return msg;
+    }
+
+    private static boolean isBefore( String date ) {
+        return new Date().before( Utils.parseStringToDate( date ) );
     }
 
 }

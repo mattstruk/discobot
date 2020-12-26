@@ -1,14 +1,15 @@
 package disco.bot.Services;
 
+import disco.bot.Discord.ChannelId;
 import disco.bot.Discord.Reaction;
 import disco.bot.Discord.UserId;
 import disco.bot.JavacordBot;
 import disco.bot.Utils.Discord;
 import disco.bot.Utils.TextFormatter;
 import org.apache.commons.lang3.StringUtils;
-import org.javacord.api.DiscordApi;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
+import org.javacord.api.event.message.reaction.ReactionRemoveEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +32,10 @@ public class DiscordReactionService {
         }
     }
 
-    public static void makeAnnouncementWhenAllVoted(ReactionAddEvent event, String channelForVoting, String channelForAnnoucement, List<UserId> users, String annoucement, DiscordApi api ) {
-        if ( Discord.compareChannels( channelForVoting, event ) && isntLocked( event, api ) && hasEveryoneVoted( event, users ) ) {
+    public static void makeAnnouncementWhenAllVoted(ReactionAddEvent event, String channelForVoting, String channelForAnnoucement, List<UserId> users, String annoucement ) {
+        if ( Discord.compareChannels( channelForVoting, event ) && isntLocked( event ) && hasEveryoneVoted( event, users ) ) {
             annoucement += TextFormatter.boldWrapper( getContent( event ) ) + ":\n" + listAllReactions( event );
-            DiscordMessageService.createMessage(api, channelForAnnoucement, annoucement);
+            DiscordMessageService.createMessage( channelForAnnoucement, annoucement);
             event.addReactionsToMessage( Reaction.LOCKED.getValue() );
         }
     }
@@ -73,7 +74,7 @@ public class DiscordReactionService {
         return !String.valueOf( event.getUserId() ).equals( JavacordBot.BOT_ID );
     }
 
-    private static boolean isntLocked( ReactionAddEvent event, DiscordApi api ) {
+    private static boolean isntLocked( ReactionAddEvent event ) {
         return getReactions( event ).stream().noneMatch( reaction -> reaction.getEmoji().equalsEmoji( Reaction.LOCKED.getValue() ) );
     }
 
@@ -113,5 +114,11 @@ public class DiscordReactionService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void undoLockedReactionRemove( ReactionRemoveEvent event ) {
+        if ( Discord.compareChannels( ChannelId.ANKIETY.getId(), event ) && event.getEmoji().asUnicodeEmoji().get().equals( Reaction.LOCKED.getValue() ) ) {
+            Discord.getMsg( event ).addReaction( Reaction.LOCKED.getValue() );
+        }
     }
 }

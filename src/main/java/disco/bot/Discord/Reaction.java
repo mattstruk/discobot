@@ -14,7 +14,8 @@ public enum Reaction {
     THUMBS_DOWN          ("\uD83D\uDC4E"),
     WHATEVER             ("\uD83E\uDD37\u200D♂️"),
     FACEPALM             ("\uD83E\uDD26\u200D♂️"),
-    LOCKED               ("\uD83D\uDD10");
+    LOCKED               ("\uD83D\uDD10"),
+    EXCLAMATION          ("❗");
 
     private final String id;
 

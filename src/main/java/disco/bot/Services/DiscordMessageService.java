@@ -3,6 +3,7 @@ package disco.bot.Services;
 import disco.bot.Discord.ChannelId;
 import disco.bot.Discord.Reaction;
 import disco.bot.Discord.UserId;
+import disco.bot.JavacordBot;
 import disco.bot.Utils.Discord;
 import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.DiscordApi;
@@ -28,9 +29,9 @@ public class DiscordMessageService {
             event.getChannel().sendMessage( message );
     }
 
-    public static void createMessage( DiscordApi api, String channel, String message ) {
+    public static void createMessage( String channel, String message ) {
         if ( StringUtils.isNotBlank( message ) )
-            api.getChannelById( channel ).get().asServerTextChannel().get().sendMessage( message );
+            JavacordBot.api.getChannelById( channel ).get().asServerTextChannel().get().sendMessage( message );
     }
 
     public static void deleteeMessage( MessageCreateEvent event ) {
@@ -39,27 +40,31 @@ public class DiscordMessageService {
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
     }
 
-    public static String modifyOrReplaceLastMessage( DiscordApi api, ChannelId channelId, MessageCreateEvent event, String output ) {
-        String calendarmsg = Discord.getLatestMsgAsString( api, channelId );
+    public static String modifyOrReplaceLastMessage( ChannelId channelId, MessageCreateEvent event, String output ) {
+        String calendarMsg = Discord.getLatestMsgAsString( channelId );
 
-        if ( StringUtils.isEmpty( calendarmsg) )
+        if ( StringUtils.isEmpty( calendarMsg ) )
             return null;
 
         String userInput = Discord.getMsgWithoutCommand( event );
-        String editedMessage = calendarmsg + "\n" + userInput;
+        String editedMessage = calendarMsg + "\n" + userInput;
 
-        if ( Discord.getLatestMsgFromChannel( api, channelId ).getUserAuthor().get().isBot() )
-            Discord.getLatestMsgFromChannel( api, channelId ).edit( editedMessage );
+        if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
+            Discord.getLatestMsgFromChannel( channelId ).edit( editedMessage );
         else {
-            Discord.getLatestMsgFromChannel( api, channelId ).removeContent();
-            api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( editedMessage );
+            Discord.getLatestMsgFromChannel( channelId ).removeContent();
+            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( editedMessage );
         }
         return output;
     }
 
-    public static void deleteMessageAndSetRound( MessageCreateEvent event,  int[] currentWEKRound) {
-        currentWEKRound[0] = Integer.parseInt( Discord.getMsg( event ).replaceAll("[^0-9]", "").trim() );
-        deleteeMessage( event );
+    public static void modifyOrReplaceLastMessage( ChannelId channelId, String newMessage ) {
+        if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
+            Discord.getLatestMsgFromChannel( channelId ).edit( newMessage );
+        else {
+            Discord.getLatestMsgFromChannel( channelId ).removeContent();
+            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( newMessage );
+        }
     }
 
     public static void addFuckersForUserMessages( MessageCreateEvent event, UserId user  ) {

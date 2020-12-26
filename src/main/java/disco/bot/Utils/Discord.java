@@ -2,11 +2,12 @@ package disco.bot.Utils;
 
 import disco.bot.Discord.ChannelId;
 import disco.bot.Discord.UserId;
+import disco.bot.JavacordBot;
 import org.apache.commons.lang3.StringUtils;
-import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
+import org.javacord.api.event.message.reaction.SingleReactionEvent;
 
 import java.util.concurrent.ExecutionException;
 
@@ -32,7 +33,7 @@ public class Discord {
         return StringUtils.substringAfter( event.getMessageContent(), StringUtils.SPACE );
     }
 
-    public static Message getMsg( ReactionAddEvent event ) {
+    public static Message getMsg( SingleReactionEvent event ) {
         try {
             return event.getChannel().getMessageById( event.getMessageId() ).get();
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
@@ -47,18 +48,18 @@ public class Discord {
         return String.valueOf( event.getMessageAuthor().getId() ).equals( user.getId() );
     }
 
-    public static String getLatestMsgAsString(DiscordApi api, ChannelId channelId ) {
-        return getLatestMsgFromChannel( api, channelId ).getContent();
+    public static String getLatestMsgAsString( ChannelId channelId ) {
+        return getLatestMsgFromChannel( channelId ).getContent();
     }
 
-    public static Message getLatestMsgFromChannel( DiscordApi api, ChannelId channelId ) {
+    public static Message getLatestMsgFromChannel( ChannelId channelId ) {
         try {
-            return api.getChannelById( channelId.getId() ).get().asTextChannel().get().getMessages( 1 ).get().getNewestMessage().get();
+            return JavacordBot.api.getChannelById( channelId.getId() ).get().asTextChannel().get().getMessages( 1 ).get().getNewestMessage().get();
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
         return null;
     }
 
-    public static boolean compareChannels( String channelId, ReactionAddEvent event ) {
+    public static boolean compareChannels( String channelId, SingleReactionEvent event ) {
         return channelId.equalsIgnoreCase( String.valueOf( event.getChannel().getId() ) );
     }
 
