@@ -3,15 +3,21 @@ package disco.bot.Services;
 import disco.bot.Discord.ChannelId;
 import disco.bot.Model.Race;
 import disco.bot.Model.Season;
+import disco.bot.Model.StringAndDate;
+import disco.bot.Utils.Discord;
+import disco.bot.Utils.TextFormatter;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.discordjson.json.MessageData;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class CalendarNotificationService {
@@ -129,5 +135,10 @@ public class CalendarNotificationService {
     private static int countLines(String str){
         String[] lines = str.split("\n");
         return  lines.length;
+    }
+
+    public static String processCalendarMessage( org.javacord.api.event.message.MessageCreateEvent event ) {
+        List<String> singleLines = Arrays.asList( Discord.getMsg(event).split("\n") );
+        return singleLines.stream().map( s -> StringUtils.isNotBlank( s ) && new StringAndDate( s ).getDate() == null && !s.contains("**") ? TextFormatter.boldWrapper( s ) : s ).collect(Collectors.joining("\n"));
     }
 }

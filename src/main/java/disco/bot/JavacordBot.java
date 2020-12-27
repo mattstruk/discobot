@@ -44,7 +44,7 @@ public class JavacordBot {
             if ( Discord.compareChannels( ChannelId.KOMENDY.getId(), event ) )
                 return;
 
-            if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI, event, "Dodano zawartość do kalendarza" ) );
+            if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI, CalendarNotificationService.processCalendarMessage( event ), "Dodano zawartość do kalendarza" ) );
             if ( Discord.contains( event, "dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI, event, "Dodano zadanie") );
             if ( Discord.equals(   event, "!dubson" ) )         DiscordMessageService.createMessage( event, MiddleFingerAlphabetService.printFuckerText( "dubson" ) );
             if ( Discord.contains( event, "!fuckertext" ) )     DiscordMessageService.createMessage( event, FuckerTextResolver.convertTextToFuckers( Discord.getMsg( event ) ) );

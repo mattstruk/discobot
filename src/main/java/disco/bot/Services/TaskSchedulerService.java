@@ -92,6 +92,6 @@ public class TaskSchedulerService {
             singleLine.get( i ).setString( TextFormatter.underlineWrapper( singleLine.get( i ).getString() ) + Reaction.EXCLAMATION.getValue() );
         }
 
-        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ, singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")) );
+        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ, singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")), null );
     }
 }

@@ -34,37 +34,31 @@ public class DiscordMessageService {
             JavacordBot.api.getChannelById( channel ).get().asServerTextChannel().get().sendMessage( message );
     }
 
-    public static void deleteeMessage( MessageCreateEvent event ) {
+    public static void deleteMessage(MessageCreateEvent event ) {
         try {
             event.getChannel().getMessageById( event.getMessageId() ).get().delete();
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
     }
 
-    public static String modifyOrReplaceLastMessage( ChannelId channelId, MessageCreateEvent event, String output ) {
-        String calendarMsg = Discord.getLatestMsgAsString( channelId );
-
-        if ( StringUtils.isEmpty( calendarMsg ) )
-            return null;
-
-        String userInput = Discord.getMsgWithoutCommand( event );
-        String editedMessage = calendarMsg + "\n" + userInput;
-
+    public static String modifyOrReplaceLastMessage( ChannelId channelId, MessageCreateEvent event, String output  ) {
+        String finalMessage = Discord.getMsg( event ) + "\n" + event.getMessageContent();
         if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
-            Discord.getLatestMsgFromChannel( channelId ).edit( editedMessage );
+            Discord.getLatestMsgFromChannel( channelId ).edit( finalMessage );
         else {
             Discord.getLatestMsgFromChannel( channelId ).removeContent();
-            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( editedMessage );
+            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( finalMessage );
         }
         return output;
     }
 
-    public static void modifyOrReplaceLastMessage( ChannelId channelId, String newMessage ) {
+    public static String modifyOrReplaceLastMessage( ChannelId channelId, String finalMessage, String output  ) {
         if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
-            Discord.getLatestMsgFromChannel( channelId ).edit( newMessage );
+            Discord.getLatestMsgFromChannel( channelId ).edit( finalMessage );
         else {
             Discord.getLatestMsgFromChannel( channelId ).removeContent();
-            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( newMessage );
+            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( finalMessage );
         }
+        return output;
     }
 
     public static void addFuckersForUserMessages( MessageCreateEvent event, UserId user  ) {
