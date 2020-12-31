@@ -8,4 +8,5 @@ out/
 *.iml
 .idea/
 debug.log
-file.txt
+credentials.txt
+data.txt

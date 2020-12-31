@@ -1,21 +1,17 @@
 package disco.bot.Services;
 
-import org.apache.commons.lang3.StringUtils;
+import disco.bot.Utils.Utils;
 import org.apache.commons.lang3.time.DateUtils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ToDoNotificationService {
 
-    public static String notifications(String str, String hour) throws ParseException {
+    public static String notifications(String str, String hour) {
         String returnMessage = "";
         for (String s : str.split("\n")) {
             if ( getHoursByDaysRemaining( Math.abs( ChronoUnit.DAYS.between( extractDay( s ).toInstant(), new Date().toInstant() ) ) ).contains(  hour ) )
@@ -32,12 +28,8 @@ public class ToDoNotificationService {
                        Arrays.asList("9", "12", "15", "18", "21");
     }
 
-    private static Date extractDay( String str ) throws ParseException {
-        String regex = "((\\d{1,2}-\\d{1,2}-\\d{4})|(\\d{1,2}\\.\\d{1,2}\\.\\d{4})|(\\d{1,2}/\\d{2}/\\d{4}))";
-        Matcher m = Pattern.compile(regex).matcher( str );
-        String[] dividersToBeReplaced = {".", "/"};
-        return m.find() ? new SimpleDateFormat("dd-MM-yyyy").parse(
-                StringUtils.replaceEach( m.group(1), dividersToBeReplaced, Collections.nCopies(dividersToBeReplaced.length, "-").toArray(new String[dividersToBeReplaced.length])) )
-                : DateUtils.addDays(new Date(), 4);
+    private static Date extractDay( String str ) {
+        Date date = Utils.extractDateFromString( str );
+        return date != null ? date : DateUtils.addDays(new Date(), 4);
     }
 }

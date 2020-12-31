@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Data
 @ToString
@@ -17,17 +15,9 @@ public class StringAndDate {
 
     public StringAndDate( String s ) {
         this.string = s;
-        this.date = getDateFromString();
+        this.date = Utils.extractDateFromString( s );
         this.isBeforeDate = hasDatePassed( this.date );
         removeUnderlineAndExclamationSign();
-    }
-
-    private Date getDateFromString( ) {
-        String regex = "((\\d{1,2}-\\d{1,2}-\\d{4})|(\\d{1,2}\\.\\d{1,2}\\.\\d{4})|(\\d{1,2}/\\d{2}/\\d{4}))";
-        Matcher matcher = Pattern.compile(regex).matcher( this.string );
-        return matcher.find()
-                    ? Utils.parseStringToDate( matcher.group(0) )
-                    : null;
     }
 
     private boolean hasDatePassed( Date date ) {

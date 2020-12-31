@@ -25,6 +25,10 @@ public class Discord {
         return event.getMessageAuthor().getDisplayName();
     }
 
+    public static String getAuthorId( MessageCreateEvent event ) {
+        return event.getMessageAuthor().getIdAsString();
+    }
+
     public static String getMsg( MessageCreateEvent event ) {
         return event.getMessageContent();
     }

@@ -20,7 +20,7 @@ public class DiscordMessageService {
 
     public static DiscordApi init() throws IOException {
         return new DiscordApiBuilder()
-                .setToken( Files.readAllLines( Paths.get(System.getProperty("user.dir") + "/file.txt") ).get(0) )
+                .setToken( Files.readAllLines( Paths.get(System.getProperty("user.dir") + "/credentials.txt") ).get(0) )
                 .login().join();
     }
 
