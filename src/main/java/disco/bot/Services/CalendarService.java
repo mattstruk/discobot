@@ -17,7 +17,7 @@ public class CalendarService {
     List<String> listOfEvents = new ArrayList<>();
 
     public CalendarService() {
-        List<String> calendar = Arrays.asList( Discord.getLatestMsgAsString( ChannelId.KALENDARZ ).split("\n") );
+        List<String> calendar = Arrays.asList( Discord.getLatestMsgAsString( ChannelId.KALENDARZ.getId() ).split("\n") );
         calendar.forEach(c -> {
             if ( c.contains("**") ) {
                 events.put(c, calendar.get(calendar.indexOf(c) + 1));
@@ -26,9 +26,9 @@ public class CalendarService {
         });
     }
 
-    public static String processCalendarMessage(MessageCreateEvent event ) {
-        List<String> singleLines = Arrays.asList( Discord.getMsg(event).split("\n") );
-        return singleLines.stream().map( s -> StringUtils.isNotBlank( s ) && new StringAndDate( s ).getDate() == null && !s.contains("**") ? TextFormatter.boldWrapper( s ) : s ).collect(Collectors.joining("\n"));
+    public static String addNewCalendarEventToExistingList( MessageCreateEvent event ) {
+        List<String> singleLines = Arrays.asList( Discord.getMsgWithoutCommand( event ).split("\n") );
+        return Discord.getLatestMsgFromChannel( ChannelId.KALENDARZ.getId() ).getContent() + "\n\n" + singleLines.stream().map( s -> StringUtils.isNotBlank( s ) && new StringAndDate( s ).getDate() == null && !s.contains("**") ? TextFormatter.boldWrapper( s ) : s ).collect(Collectors.joining("\n"));
     }
 
     public String listEventsIds() {

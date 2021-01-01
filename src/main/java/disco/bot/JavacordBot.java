@@ -45,8 +45,8 @@ public class JavacordBot {
             if ( Discord.compareChannels( ChannelId.KOMENDY.getId(), event ) )
                 return;
 
-            if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI, CalendarService.processCalendarMessage( event ), "Dodano zawartość do kalendarza" ) );
-            if ( Discord.contains( event, "dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI, event, "Dodano zadanie") );
+            if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ.getId(), CalendarService.addNewCalendarEventToExistingList( event ), "Dodano zawartość do kalendarza" ) );
+            if ( Discord.contains( event, "dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI.getId(), event, "Dodano zadanie") );
             if ( Discord.equals(   event, "!dubson" ) )         DiscordMessageService.createMessage( event, MiddleFingerAlphabetService.printFuckerText( "dubson" ) );
             if ( Discord.contains( event, "!fuckertext" ) )     DiscordMessageService.createMessage( event, FuckerTextResolver.convertTextToFuckers( Discord.getMsg( event ) ) );
             if ( Discord.contains( event,"!losuj kierowcy:" ) ) DiscordMessageService.createMessage( event, RandomizerService.pickRandomTeams( event ) );
@@ -56,7 +56,8 @@ public class JavacordBot {
             if ( Discord.equals(   event, "!roll" ) )           DiscordMessageService.createMessage( event, RandomizerService.rollTheDice( Discord.getMsgAuthor( event ) ) );
             if ( Discord.equals( event, "!pokazeventy") )       DiscordMessageService.createMessage( event, calendarService.listEventsIds() );
             if ( Discord.equals( event, "!wyswietlstatus") )    DiscordMessageService.createMessage( event, calendarService.getCurrentStatus( event ) );
-            if ( Discord.contains( event, "!aktualizujeventy") )     DiscordMessageService.createMessage( event, calendarService.updateEventsRecord( Discord.getAuthorId( event ), Discord.getMsgWithoutCommand( event ) ));
+            if ( Discord.contains( event, "!aktualizujeventy") )DiscordMessageService.createMessage( event, calendarService.updateEventsRecord( Discord.getAuthorId( event ), Discord.getMsgWithoutCommand( event ) ));
+            if ( Discord.equals( event, "!ping") )              DiscordMessageService.createMessage( event, RandomizerService.pingMsg( event ) );
 
             try {
                 if ( Discord.equals( event, "!generalkagt4" ) ) DiscordMessageService.createMessage( event, TextFormatter.codeBlockWrapper( ACLParser.getACLGT4TeamStandings() + ACLParser.getACLGT4DriverStandings() ) );

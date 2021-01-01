@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.javacord.api.event.message.MessageCreateEvent;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +28,7 @@ public class RandomizerService {
                 : String.format("Szczęśliwym kierowcą Maserati został... %s. Gratuluję serdecznie!", randomDriver);
     }
 
-    public static String pickRandomTeams(MessageCreateEvent event) {
+    public static String pickRandomTeams( MessageCreateEvent event ) {
         String userInput = event.getMessage().getContent();
         List<String> listOfDrivers = Arrays.asList(StringUtils.substringBetween(userInput, "!losuj kierowcy:", "zespoly:").trim().split(";"));
         listOfDrivers = listOfDrivers.stream().map(WordUtils::capitalizeFully).collect(Collectors.toList());
@@ -50,5 +52,15 @@ public class RandomizerService {
         }
 
         return finalMessage;
+    }
+
+    public static String pingMsg( MessageCreateEvent event ) {
+        List<String> ping = Arrays.asList("Lucjana", "Luki", "JarzomBa", "DubSona", "mknbla", "Maniaka");
+        Duration between = Duration.between( event.getMessage().getCreationTimestamp(), Instant.now());
+        long duration = Math.abs( between.toMillis() );
+        if ( duration < 1500 )
+            return String.format( "Pong! Opóźnienie wynosi %d ms. To na pewno mniej niż opóźnienie %s %s", duration, ping.get(random.nextInt(ping.size())), Reaction.MIDDLE_FINGER.getValue() );
+        else
+            return String.format( " Pong! Opóźnienie wynosi %d ms. Totalna kompromitacja. Sugeruję nastawić zegarek lub dorzucić węgla do RaspberryPi %s", duration, Reaction.MIDDLE_FINGER.getValue() );
     }
 }

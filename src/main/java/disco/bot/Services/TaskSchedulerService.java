@@ -58,7 +58,7 @@ public class TaskSchedulerService {
         if ( !currentTime.isCurrentHourInList( Arrays.asList(9, 12, 15, 18, 21) ) )
             return;
 
-        String latestMessage = Discord.getLatestMsgAsString( ChannelId.TODO );
+        String latestMessage = Discord.getLatestMsgAsString( ChannelId.TODO.getId() );
 
         if ( StringUtils.isEmpty( latestMessage ) )
             return;
@@ -70,7 +70,7 @@ public class TaskSchedulerService {
 
     @Scheduled(fixedRate = 43200000)
     public void distinguishNearestDatesAndRemovePast() {
-        Message latestMessage = Discord.getLatestMsgFromChannel( ChannelId.KALENDARZ );
+        Message latestMessage = Discord.getLatestMsgFromChannel( ChannelId.KALENDARZ.getId() );
         List<StringAndDate> singleLine = Arrays
                 .stream( latestMessage.getContent().split("\n") )
                 .map( StringAndDate::new )
@@ -89,7 +89,7 @@ public class TaskSchedulerService {
             singleLine.get( i ).setString( TextFormatter.underlineWrapper( singleLine.get( i ).getString() ) + Reaction.EXCLAMATION.getValue() );
         }
 
-        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ, singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")), null );
+        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ.getId(), singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")), null );
     }
 
     @Scheduled(fixedRate = 59999)

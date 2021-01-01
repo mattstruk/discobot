@@ -1,6 +1,5 @@
 package disco.bot.Utils;
 
-import disco.bot.Discord.ChannelId;
 import disco.bot.Discord.UserId;
 import disco.bot.JavacordBot;
 import org.apache.commons.lang3.StringUtils;
@@ -48,17 +47,21 @@ public class Discord {
         return String.valueOf( Discord.getMsg( event ).getUserAuthor().get().getId() ).equals( user.getId() );
     }
 
+    public static String getChannelFromMessage( MessageCreateEvent event ) {
+        return String.valueOf( event.getChannel().getId() );
+    }
+
     public static boolean isSameAuthor( MessageCreateEvent event, UserId user ) {
         return String.valueOf( event.getMessageAuthor().getId() ).equals( user.getId() );
     }
 
-    public static String getLatestMsgAsString( ChannelId channelId ) {
+    public static String getLatestMsgAsString( String channelId ) {
         return getLatestMsgFromChannel( channelId ).getContent();
     }
 
-    public static Message getLatestMsgFromChannel( ChannelId channelId ) {
+    public static Message getLatestMsgFromChannel( String channelId ) {
         try {
-            return JavacordBot.api.getChannelById( channelId.getId() ).get().asTextChannel().get().getMessages( 1 ).get().getNewestMessage().get();
+            return JavacordBot.api.getChannelById( channelId ).get().asTextChannel().get().getMessages( 1 ).get().getNewestMessage().get();
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
         return null;
     }

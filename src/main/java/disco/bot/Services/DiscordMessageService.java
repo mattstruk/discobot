@@ -1,6 +1,5 @@
 package disco.bot.Services;
 
-import disco.bot.Discord.ChannelId;
 import disco.bot.Discord.Reaction;
 import disco.bot.Discord.UserId;
 import disco.bot.JavacordBot;
@@ -40,23 +39,23 @@ public class DiscordMessageService {
         } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
     }
 
-    public static String modifyOrReplaceLastMessage( ChannelId channelId, MessageCreateEvent event, String output  ) {
+    public static String modifyOrReplaceLastMessage( String channelId, MessageCreateEvent event, String output  ) {
         String finalMessage = Discord.getMsg( event ) + "\n" + event.getMessageContent();
         if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
             Discord.getLatestMsgFromChannel( channelId ).edit( finalMessage );
         else {
             Discord.getLatestMsgFromChannel( channelId ).removeContent();
-            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( finalMessage );
+            JavacordBot.api.getChannelById( channelId ).get().asServerTextChannel().get().sendMessage( finalMessage );
         }
         return output;
     }
 
-    public static String modifyOrReplaceLastMessage( ChannelId channelId, String finalMessage, String output  ) {
-        if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
+    public static String modifyOrReplaceLastMessage( String channelId, String finalMessage, String output  ) {
+        if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() ) {
             Discord.getLatestMsgFromChannel( channelId ).edit( finalMessage );
-        else {
+        } else {
             Discord.getLatestMsgFromChannel( channelId ).removeContent();
-            JavacordBot.api.getChannelById( channelId.getId() ).get().asServerTextChannel().get().sendMessage( finalMessage );
+            JavacordBot.api.getChannelById( channelId ).get().asServerTextChannel().get().sendMessage( finalMessage );
         }
         return output;
     }
