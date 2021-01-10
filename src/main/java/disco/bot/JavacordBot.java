@@ -46,7 +46,7 @@ public class JavacordBot {
                 return;
 
             if ( Discord.contains( event, "!dodajwyscig" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ.getId(), CalendarService.addNewCalendarEventToExistingList( event ), "Dodano zawartość do kalendarza" ) );
-            if ( Discord.contains( event, "dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.POGADANKI.getId(), event, "Dodano zadanie") );
+            if ( Discord.contains( event, "!dodajzadanie" ) )    DiscordMessageService.createMessage( event, DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.TODO.getId(), event, "Dodano zadanie") );
             if ( Discord.equals(   event, "!dubson" ) )         DiscordMessageService.createMessage( event, MiddleFingerAlphabetService.printFuckerText( "dubson" ) );
             if ( Discord.contains( event, "!fuckertext" ) )     DiscordMessageService.createMessage( event, FuckerTextResolver.convertTextToFuckers( Discord.getMsg( event ) ) );
             if ( Discord.contains( event,"!losuj kierowcy:" ) ) DiscordMessageService.createMessage( event, RandomizerService.pickRandomTeams( event ) );
@@ -76,6 +76,7 @@ public class JavacordBot {
             DiscordReactionService.removeForbiddenReactions( defaultReactions, event, ChannelId.ANKIETY.getId() );
             DiscordReactionService.removeRedundantReactions( event,  ChannelId.ANKIETY.getId() );
             DiscordReactionService.makeAnnouncementWhenAllVoted( event, ChannelId.ANKIETY.getId(), ChannelId.OGLOSZENIA.getId(), users, "Wyniki ankiety pt. " );
+            DiscordReactionService.removePingingByReaction( event );
 
         });
 

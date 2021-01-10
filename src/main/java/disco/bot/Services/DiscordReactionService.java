@@ -7,11 +7,13 @@ import disco.bot.JavacordBot;
 import disco.bot.Utils.Discord;
 import disco.bot.Utils.TextFormatter;
 import org.apache.commons.lang3.StringUtils;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.event.message.reaction.ReactionRemoveEvent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -20,8 +22,7 @@ import java.util.stream.Collectors;
 public class DiscordReactionService {
 
     public static void removeForbiddenReactions( List<Reaction> ankietyAllowedReactions, ReactionAddEvent event, String channelId ) {
-        String currentEmoji = event.getEmoji().asUnicodeEmoji().get();
-        if ( Discord.compareChannels( channelId, event ) && isHuman( event ) && !ankietyAllowedReactions.stream().map( Reaction::getValue ).collect(Collectors.toList()).contains( currentEmoji ) ) {
+        if ( Discord.compareChannels( channelId, event ) && isHuman( event ) && !ankietyAllowedReactions.stream().map( Reaction::getValue ).collect(Collectors.toList()).contains( event.getEmoji().asUnicodeEmoji().get() ) ) {
             event.removeReaction();
         }
     }
@@ -119,6 +120,23 @@ public class DiscordReactionService {
     public static void undoLockedReactionRemove( ReactionRemoveEvent event ) {
         if ( Discord.compareChannels( ChannelId.ANKIETY.getId(), event ) && event.getEmoji().asUnicodeEmoji().get().equals( Reaction.LOCKED.getValue() ) ) {
             Discord.getMsg( event ).addReaction( Reaction.LOCKED.getValue() );
+        }
+    }
+
+    public static void removePingingByReaction(ReactionAddEvent event ) {
+        Message msg = Discord.getMsg( event );
+        if ( msg != null && msg.getAuthor().isBotUser() &&
+                msg.getContent().contains("Przypomnienie o rzeczach do zrobienia z kanalu #\uD83D\uDCDDto-do : \n") &&
+                msg.getContent().contains( String.valueOf( event.getUserId() ) ) ) {
+            List<String> todo = Arrays.stream( Discord.getLatestMsgFromChannel( ChannelId.TODO.getId() ).getContent().split("\n") ).collect(Collectors.toList());
+            int indexOfWypowiedzi = todo.indexOf( todo.stream().filter( s -> s.toLowerCase().contains("wypowiedzi") ).findFirst().get() );
+            String updatedRecord = todo.get( indexOfWypowiedzi ).replaceAll(String.format("<@!%s>", event.getUserId()), "");
+            if ( updatedRecord.contains("<@") )
+                todo.set( indexOfWypowiedzi, updatedRecord );
+            else
+                todo.remove( indexOfWypowiedzi );
+
+            DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.TODO.getId(), String.join( "\n", todo ), null );
         }
     }
 }

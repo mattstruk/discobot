@@ -40,7 +40,7 @@ public class DiscordMessageService {
     }
 
     public static String modifyOrReplaceLastMessage( String channelId, MessageCreateEvent event, String output  ) {
-        String finalMessage = Discord.getMsg( event ) + "\n" + event.getMessageContent();
+        String finalMessage = Discord.getLatestMsgAsString( channelId ) + "\n" + Discord.getMsgWithoutCommand( event );
         if ( Discord.getLatestMsgFromChannel( channelId ).getUserAuthor().get().isBot() )
             Discord.getLatestMsgFromChannel( channelId ).edit( finalMessage );
         else {

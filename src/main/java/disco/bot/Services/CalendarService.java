@@ -77,22 +77,4 @@ public class CalendarService {
             FileStorage.editExistingRecord( userId, input );
         return "Dodano nowe wydarzenia do sledzenia.";
     }
-
-    String userIdResolver(String userId) {
-        switch ( userId ) {
-            case "474322029856686080":
-                return "@Luka#6976";
-            case "408729434229833729":
-                return "@JarZomB#8022";
-            case "633416304954441758":
-                return "@DubSon#8931";
-            case "320695302841434112":
-                return "@Lucjan Prochnica#6723";
-            case "658052410559823882":
-                return "@Patryk \"maniakDVD\" Pyrchla#6159";
-            case "471116345610862595":
-                return "@mknbl#9471 ";
-        }
-        return null;
-    }
 }

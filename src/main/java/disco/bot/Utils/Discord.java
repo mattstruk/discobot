@@ -73,4 +73,13 @@ public class Discord {
     public static boolean compareChannels( String channelId, MessageCreateEvent event ) {
         return channelId.equalsIgnoreCase( String.valueOf( event.getChannel().getId() ) );
     }
+
+    public static String getMentionTagByUserId( String userId ) {
+        try {
+            return JavacordBot.api.getUserById( userId ).get().getMentionTag();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

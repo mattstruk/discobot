@@ -89,7 +89,7 @@ public class TaskSchedulerService {
             singleLine.get( i ).setString( TextFormatter.underlineWrapper( singleLine.get( i ).getString() ) + Reaction.EXCLAMATION.getValue() );
         }
 
-        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ.getId(), singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")), null );
+//        DiscordMessageService.modifyOrReplaceLastMessage( ChannelId.KALENDARZ.getId(), singleLine.stream().map( StringAndDate::getString ).collect(Collectors.joining("\n")), null );
     }
 
     @Scheduled(fixedRate = 59999)
@@ -107,24 +107,24 @@ public class TaskSchedulerService {
             String singleRace = entry.getValue();
             String eventName = entry.getKey();
             String indexOfCurrentEvent = String.valueOf( calendarService.listOfEvents.indexOf( eventName ) );
-            long dayDiff = Utils.getDayDifference( eventDate );
+            long dayDiff = Utils.getDayDifference( eventDate ) +1;
 
-            if ( Arrays.asList(7, 5, 2, 1).contains ( dayDiff ) )
+            if ( !Arrays.asList(7L, 5L, 2L, 1L, 0L).contains ( dayDiff ) )
                 continue;
 
             List<String> listOfSubscribers = users.stream()
                     .filter( s -> Arrays.asList( StringUtils.substringAfter(s, ":").split(";") ).contains( indexOfCurrentEvent ) )
-                    .map( s -> calendarService.userIdResolver( StringUtils.substringBefore(s, ":") ) )
+                    .map( s -> Discord.getMentionTagByUserId( StringUtils.substringBefore(s, ":") ) )
                     .collect( Collectors.toList() );
 
             if ( listOfSubscribers.isEmpty() )
                 continue;
 
-            finalMessage.append( String.format( "Wyscig %s odbędzie się za %d. %s", singleRace, dayDiff, String.join(" ", listOfSubscribers) ) );
+            finalMessage.append( String.format( "Wyscig %s odbędzie się za %d dni. %s \n", singleRace, dayDiff, String.join(" ", listOfSubscribers) ) );
         }
 
         if ( StringUtils.isNotBlank(finalMessage.toString()) )
-            DiscordMessageService.createMessage( ChannelId.POGADANKI.getId(), finalMessage.toString());
+            DiscordMessageService.createMessage( ChannelId.POGADANKI.getId(), StringUtils.substringBeforeLast( finalMessage.toString(), "\n" ) );
     }
 
 }
